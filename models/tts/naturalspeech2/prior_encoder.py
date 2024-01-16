@@ -16,19 +16,75 @@ from modules.naturalpseech2.transformers import (
 
 
 class PriorEncoder(nn.Module):
-    def __init__(self, cfg):
+    def __init__(
+        self,
+        encoder_layer=None,
+        encoder_hidden=None,
+        encoder_head=None,
+        conv_filter_size=None,
+        conv_kernel_size=None,
+        encoder_dropout=None,
+        use_skip_connection=None,
+        use_new_ffn=None,
+        vocab_size=None,
+        cond_dim=None,
+        cfg=None,
+    ):
         super().__init__()
         self.cfg = cfg
+
+        self.encoder_layer = (
+            encoder_layer if encoder_layer is not None else cfg.encoder_layer
+        )
+        self.encoder_hidden = (
+            encoder_hidden if encoder_hidden is not None else cfg.encoder_hidden
+        )
+        self.encoder_head = (
+            encoder_head if encoder_head is not None else cfg.encoder_head
+        )
+        self.conv_filter_size = (
+            conv_filter_size if conv_filter_size is not None else cfg.conv_filter_size
+        )
+        self.conv_kernel_size = (
+            conv_kernel_size if conv_kernel_size is not None else cfg.conv_kernel_size
+        )
+        self.encoder_dropout = (
+            encoder_dropout if encoder_dropout is not None else cfg.encoder_dropout
+        )
+        self.use_skip_connection = (
+            use_skip_connection
+            if use_skip_connection is not None
+            else cfg.use_skip_connection
+        )
+        self.use_new_ffn = use_new_ffn if use_new_ffn is not None else cfg.use_new_ffn
+        self.vocab_size = vocab_size if vocab_size is not None else cfg.vocab_size
+        self.cond_dim = cond_dim if cond_dim is not None else cfg.cond_dim
+
         self.enc_emb_tokens = nn.Embedding(
-            cfg.vocab_size, cfg.encoder.encoder_hidden, padding_idx=0
+            self.vocab_size, self.encoder_hidden, padding_idx=0
         )
         self.enc_emb_tokens.weight.data.normal_(mean=0.0, std=1e-5)
+
         self.encoder = TransformerEncoder(
-            enc_emb_tokens=self.enc_emb_tokens, cfg=cfg.encoder
+            enc_emb_tokens=self.enc_emb_tokens,
+            encoder_layer=self.encoder_layer,
+            encoder_hidden=self.encoder_hidden,
+            encoder_head=self.encoder_head,
+            conv_filter_size=self.conv_filter_size,
+            conv_kernel_size=self.conv_kernel_size,
+            encoder_dropout=self.encoder_dropout,
+            use_new_ffn=self.use_new_ffn,
+            use_cln=True,
+            use_skip_connection=False,
+            add_diff_step=False,
         )
 
-        self.duration_predictor = DurationPredictor(cfg.duration_predictor)
-        self.pitch_predictor = PitchPredictor(cfg.pitch_predictor)
+        self.cond_project = nn.Linear(self.cond_dim, self.encoder_hidden)
+        self.cond_project.weight.data.normal_(0.0, 0.02)
+
+        # TODO: add params (not cfg) for DurationPredictor and PitchPredictor
+        self.duration_predictor = DurationPredictor(cfg=cfg.duration_predictor)
+        self.pitch_predictor = PitchPredictor(cfg=cfg.pitch_predictor)
         self.length_regulator = LengthRegulator()
 
         self.pitch_min = cfg.pitch_min
@@ -42,9 +98,8 @@ class PriorEncoder(nn.Module):
         )
         self.register_buffer("pitch_bins", pitch_bins)
 
-        self.pitch_embedding = nn.Embedding(
-            self.pitch_bins_num, cfg.encoder.encoder_hidden
-        )
+        self.pitch_embedding = nn.Embedding(self.pitch_bins_num, self.encoder_hidden)
+        self.pitch_embedding.weight.data.normal_(mean=0.0, std=1e-5)
 
     def forward(
         self,
@@ -57,26 +112,13 @@ class PriorEncoder(nn.Module):
         ref_mask=None,
         is_inference=False,
     ):
-        """
-        input:
-        phone_id: (B, N)
-        duration: (B, N)
-        pitch: (B, T)
-        phone_mask: (B, N); mask is 0
-        mask: (B, T); mask is 0
-        ref_emb: (B, d, T')
-        ref_mask: (B, T'); mask is 0
+        ref_emb = self.cond_project(ref_emb)
 
-        output:
-        prior_embedding: (B, d, T)
-        pred_dur: (B, N)
-        pred_pitch: (B, T)
-        """
+        x = self.encoder(phone_id, phone_mask, ref_emb)
 
-        x = self.encoder(phone_id, phone_mask, ref_emb.transpose(1, 2))
-        # print(torch.min(x), torch.max(x))
-        dur_pred_out = self.duration_predictor(x, phone_mask, ref_emb, ref_mask)
-        # dur_pred_out: {dur_pred_log, dur_pred, dur_pred_round}
+        dur_pred_out = self.duration_predictor(
+            x, phone_mask, ref_emb.transpose(1, 2), ref_mask
+        )
 
         if is_inference or duration is None:
             x, mel_len = self.length_regulator(
@@ -87,10 +129,13 @@ class PriorEncoder(nn.Module):
         else:
             x, mel_len = self.length_regulator(x, duration, max_len=pitch.shape[1])
 
-        pitch_pred_log = self.pitch_predictor(x, mask, ref_emb, ref_mask)
+        pitch_pred_log = self.pitch_predictor(
+            x, mask, ref_emb.transpose(1, 2), ref_mask
+        )
 
         if is_inference or pitch is None:
-            pitch_tokens = torch.bucketize(pitch_pred_log.exp(), self.pitch_bins)
+            # pitch_tokens = torch.bucketize(pitch_pred_log.exp(), self.pitch_bins)
+            pitch_tokens = torch.bucketize(pitch_pred_log.exp() - 1, self.pitch_bins)
             pitch_embedding = self.pitch_embedding(pitch_tokens)
         else:
             pitch_tokens = torch.bucketize(pitch, self.pitch_bins)
