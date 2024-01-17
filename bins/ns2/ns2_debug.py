@@ -88,7 +88,7 @@ def main():
     num_param = sum(param.numel() for param in model.parameters())
     print("Number of parameters: %f M" % (num_param / 1e6))
 
-    from models.tts.naturalspeech2.inference_utils.vocoder import BigVGAN as Generator
+    from models.tts.naturalspeech2.vocoder import BigVGAN as Generator
     config_file = "/mnt/data2/wangyuancheng/ns2_ckpts/bigvgan/config.json"
     with open(config_file) as f:
         data = f.read()

@@ -11,7 +11,8 @@ import numpy as np
 import json
 
 from models.tts.naturalspeech2.ns2 import NaturalSpeech2
-from models.tts.naturalspeech2.inference_utils.vocoder import BigVGAN as Generator
+from models.tts.naturalspeech2.vocoder import BigVGAN as Generator
+from models.tts.naturalspeech2.get_feature import mel_spectrogram
 from encodec import EncodecModel
 from encodec.utils import convert_audio
 from utils.util import load_config
