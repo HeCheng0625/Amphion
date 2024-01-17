@@ -8,6 +8,7 @@ import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
 
+
 class Diffusion(nn.Module):
     def __init__(self, cfg, diff_model):
         super().__init__()

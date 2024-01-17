@@ -127,8 +127,11 @@ class ResidualBlock(nn.Module):
         return (x + residual) / math.sqrt(2.0), skip
 
 
-class WaveNet(nn.Module):
-    def __init__(self, cfg):
+class DiffWaveNet(nn.Module):
+    def __init__(
+        self,
+        cfg=None,
+    ):
         super().__init__()
 
         self.cfg = cfg
@@ -170,14 +173,20 @@ class WaveNet(nn.Module):
 
         nn.init.zeros_(self.out_proj.weight)
 
-    def forward(self, x, x_mask, cond, diffusion_step, spk_query_emb):
-        """
-        x: (B, 128, T)
-        x_mask: (B, T), mask is 0
-        cond: (B, T, 512)
-        diffusion_step: (B,)
-        spk_query_emb: (B, 32, 512)
-        """
+    def forward(
+        self,
+        x,
+        condition_embedding,
+        key_padding_mask=None,
+        reference_embedding=None,
+        diffusion_step=None,
+    ):
+        x = x.transpose(1, 2)  # (B, T, d) -> (B, d, T)
+        x_mask = key_padding_mask
+        cond = condition_embedding
+        spk_query_emb = reference_embedding
+        diffusion_step = diffusion_step
+
         cond = self.cond_ln(cond)
         cond_input = cond.transpose(1, 2)
 
@@ -202,5 +211,7 @@ class WaveNet(nn.Module):
         x_out = F.relu(x_out)
 
         x_out = self.out_proj(x_out)  # (B, 128, T)
+
+        x_out = x_out.transpose(1, 2)
 
         return x_out

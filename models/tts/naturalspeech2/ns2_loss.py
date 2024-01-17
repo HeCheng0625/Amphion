@@ -10,9 +10,6 @@ import torch.nn.functional as F
 
 
 def log_dur_loss(dur_pred_log, dur_target, mask, loss_type="l1"):
-    # dur_pred_log: (B, N)
-    # dur_target: (B, N)
-    # mask: (B, N) mask is 0
     dur_target_log = torch.log(1 + dur_target)
     if loss_type == "l1":
         loss = F.l1_loss(
@@ -29,7 +26,7 @@ def log_dur_loss(dur_pred_log, dur_target, mask, loss_type="l1"):
 
 
 def log_pitch_loss(pitch_pred_log, pitch_target, mask, loss_type="l1"):
-    pitch_target_log = torch.log(pitch_target)
+    pitch_target_log = torch.log(1 + pitch_target)
     if loss_type == "l1":
         loss = F.l1_loss(
             pitch_pred_log, pitch_target_log, reduction="none"
