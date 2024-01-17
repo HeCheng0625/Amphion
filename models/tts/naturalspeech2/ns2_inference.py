@@ -8,8 +8,10 @@ import os
 import torch
 import soundfile as sf
 import numpy as np
+import json
 
 from models.tts.naturalspeech2.ns2 import NaturalSpeech2
+from models.tts.naturalspeech2.inference_utils.vocoder import BigVGAN as Generator
 from encodec import EncodecModel
 from encodec.utils import convert_audio
 from utils.util import load_config
@@ -20,8 +22,13 @@ from text.g2p import preprocess_english, read_lexicon
 
 import torchaudio
 
+class AttrDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
 
-class NS2Inference:
+
+class NS2InferenceOld:
     def __init__(self, args, cfg):
         self.cfg = cfg
         self.args = args
@@ -125,4 +132,66 @@ class NS2Inference:
             type=int,
             default=200,
             help="Total inference steps for the diffusion model",
+        )
+
+
+class NS2Inference:
+    def __init__(self, args, cfg):
+        self.cfg = cfg
+        self.args = args
+
+        self.vocoder = self.build_vocoder()
+
+    def build_model(self):
+        model = NaturalSpeech2(self.cfg.model)
+        model.load_state_dict(
+            torch.load(
+                os.path.join(self.args.checkpoint_path, "pytorch_model.bin"),
+                map_location="cpu",
+            )
+        )
+        model = model.to(self.args.device)
+        return model
+    
+    def build_vocoder(self):
+        config_file = os.path.join(self.args.vocoder_config_path)
+        with open(config_file) as f:
+            data = f.read()
+        json_config = json.loads(data)
+        h = AttrDict(json_config)
+        self.vocoder = Generator(h).to(self.args.local_rank)
+        checkpoint_dict = torch.load(
+            self.args.vocoder_path, map_location=self.args.local_rank
+        )
+        self.vocoder.load_state_dict(checkpoint_dict["generator"])
+
+    def get_ref_mel(self):
+        ...
+
+    def inference(self):
+        ...
+
+    def add_arguments(parser: argparse.ArgumentParser):
+        parser.add_argument(
+            "--ref_audio",
+            type=str,
+            default="",
+            help="Reference audio path",
+        )
+        parser.add_argument(
+            "--device",
+            type=str,
+            default="cuda",
+        )
+        parser.add_argument(
+            "--inference_step",
+            type=int,
+            default=200,
+            help="Total inference steps for the diffusion model",
+        )
+        parser.add_argument(
+            "--vocoder_config_path",
+            type=str,
+            default="",
+            help="Vocoder config path",
         )

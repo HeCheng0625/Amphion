@@ -4,6 +4,8 @@ import torch
 import soundfile as sf
 import numpy as np
 
+import json
+
 from models.tts.naturalspeech2.ns2_trainer import NS2Trainer
 from models.tts.naturalspeech2.ns2_dataset import NS2Dataset
 from models.tts.naturalspeech2.ns2 import NaturalSpeech2
@@ -17,6 +19,10 @@ from text.g2p import preprocess_english, read_lexicon
 
 import torchaudio
 
+class AttrDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
 
 def build_trainer(args, cfg):
     supported_trainer = {
@@ -80,7 +86,21 @@ def main():
     print(model)
 
     num_param = sum(param.numel() for param in model.parameters())
-    print("Number of parameters: %f M" % (num_param/1e6))
+    print("Number of parameters: %f M" % (num_param / 1e6))
+
+    from models.tts.naturalspeech2.inference_utils.vocoder import BigVGAN as Generator
+    config_file = "/mnt/data2/wangyuancheng/ns2_ckpts/bigvgan/config.json"
+    with open(config_file) as f:
+        data = f.read()
+    json_file = json.loads(data)
+    h = AttrDict(json_file)
+    vocoder = Generator(h)
+    state_dict_g = torch.load("/mnt/data2/wangyuancheng/ns2_ckpts/bigvgan/g_00490000",
+                              map_location="cpu")
+    vocoder.load_state_dict(state_dict_g['generator'])
+    print(vocoder)
+    num_param = sum(param.numel() for param in vocoder.parameters())
+    print("Number of parameters: %f M" % (num_param / 1e6))
 
 
 if __name__ == "__main__":
