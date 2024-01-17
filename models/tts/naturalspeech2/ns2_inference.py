@@ -9,6 +9,8 @@ import torch
 import soundfile as sf
 import numpy as np
 import json
+import librosa
+import torchaudio
 
 from models.tts.naturalspeech2.ns2 import NaturalSpeech2
 from models.tts.naturalspeech2.vocoder import BigVGAN as Generator
@@ -20,8 +22,9 @@ from utils.util import load_config
 from text import text_to_sequence
 from text.cmudict import valid_symbols
 from text.g2p import preprocess_english, read_lexicon
+from text.g2p_extend import process as preprocess_english_extend, PHPONE2ID
+from g2p_en import G2p
 
-import torchaudio
 
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
@@ -141,7 +144,9 @@ class NS2Inference:
         self.cfg = cfg
         self.args = args
 
+        self.model = self.build_model()
         self.vocoder = self.build_vocoder()
+        self.g2p = G2p()
 
     def build_model(self):
         model = NaturalSpeech2(self.cfg.model)
@@ -153,24 +158,78 @@ class NS2Inference:
         )
         model = model.to(self.args.device)
         return model
-    
+
     def build_vocoder(self):
         config_file = os.path.join(self.args.vocoder_config_path)
         with open(config_file) as f:
             data = f.read()
         json_config = json.loads(data)
         h = AttrDict(json_config)
-        self.vocoder = Generator(h).to(self.args.local_rank)
+        vocoder = Generator(h).to(self.args.device)
         checkpoint_dict = torch.load(
-            self.args.vocoder_path, map_location=self.args.local_rank
+            self.args.vocoder_path, map_location=self.args.device
         )
-        self.vocoder.load_state_dict(checkpoint_dict["generator"])
+        vocoder.load_state_dict(checkpoint_dict["generator"])
+
+        return vocoder
 
     def get_ref_mel(self):
-        ...
+        ref_wav_path = self.args.ref_audio
+        ref_wav, sr = librosa.load(ref_wav_path, sr=self.cfg.preprocess.sampling_rate)
+        ref_wav = torch.from_numpy(ref_wav).to(self.args.device)
+        ref_wav = ref_wav[None, :]
+        ref_mel = mel_spectrogram(
+            ref_wav,
+            n_fft=self.cfg.preprocess.n_fft,
+            num_mels=self.cfg.preprocess.num_mels,
+            sampling_rate=self.cfg.preprocess.sampling_rate,
+            hop_size=self.cfg.preprocess.hop_size,
+            win_size=self.cfg.preprocess.win_size,
+            fmin=self.cfg.preprocess.fmin,
+            fmax=self.cfg.preprocess.fmax,
+        )
+        ref_mel = ref_mel.transpose(1, 2).to(self.args.device)
+        ref_mask = torch.ones(ref_mel.shape[0], ref_mel.shape[1]).to(ref_mel.device)
 
+        return ref_mel, ref_mask
+
+    @torch.no_grad()
     def inference(self):
-        ...
+        ref_mel, ref_mask = self.get_ref_mel()
+
+        txt_struct, txt = preprocess_english_extend(self.args.text, self.g2p)
+        phone_seq = [p for w in txt_struct for p in w[1]]
+        print(phone_seq)
+        phone_id = [PHPONE2ID[p] for p in phone_seq]
+        phone_id = torch.LongTensor(phone_id).unsqueeze(0).to(self.args.device)
+
+        x0, prior_out = self.model.inference(
+            phone_id=phone_id,
+            x_ref=ref_mel,
+            x_ref_mask=ref_mask,
+            inference_steps=self.args.inference_step,
+            sigma=1.2,
+        )
+
+        os.makedirs(self.args.output_dir, exist_ok=True)
+
+        x0 = x0.transpose(1, 2)
+
+        self.vocoder.eval()
+        self.vocoder.remove_weight_norm()
+
+        rec_wav = self.vocoder(x0)
+        rec_wav = rec_wav.squeeze()
+        rec_wav = rec_wav * 32768.0
+        rec_wav = rec_wav.cpu().numpy().astype("int16")
+
+        sf.write(
+            "{}/{}.wav".format(
+                self.args.output_dir, self.args.text.replace(" ", "_", 100)
+            ),
+            rec_wav,
+            samplerate=self.cfg.preprocess.sampling_rate,
+        )
 
     def add_arguments(parser: argparse.ArgumentParser):
         parser.add_argument(
@@ -195,4 +254,10 @@ class NS2Inference:
             type=str,
             default="",
             help="Vocoder config path",
+        )
+        parser.add_argument(
+            "--vocoder_path",
+            type=str,
+            default="",
+            help="Vocoder checkpoint path",
         )
