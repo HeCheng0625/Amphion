@@ -1,0 +1,31 @@
+{
+    "model_type": "TTMIDI",
+    "base_config": "config/base.json",
+    "dataset": [
+        "Opera"
+    ],
+    "train": {
+        "save_checkpoint_stride": [10],
+        "keep_last": [1000],
+        "run_eval": [true],
+        "dataloader": {
+            "num_worker": 4,
+            "pin_memory": true
+          },
+          "adam": {
+            "lr": 1.0e-4
+        },
+        "batch_size": 1,
+        "gradient_accumulation_step" : 1,
+        "epochs": 1000,
+        "max_steps": 50000,
+        "save_summary_steps": 500,
+        "save_checkpoints_steps": 2000,
+        "valid_interval": 2000,
+        "keep_checkpoint_max": 100,
+        "lr_warmup_steps": 5000,
+        "lr_scheduler": "cosine",
+        "num_train_steps": 800000
+    },
+    "log_dir": "/blob/v-yuancwang/amphion_ttmidi"
+}
