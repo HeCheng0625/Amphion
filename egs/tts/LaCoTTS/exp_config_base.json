@@ -1,5 +1,4 @@
 {
-    // "base_config": "config/tts.json",
     "model_type": "GPTTTS",
     "dataset": ["Your Dataset Name"],
     "preprocess": {
@@ -31,8 +30,8 @@
                 "vocos_num_layers": 16,
                 "ln_before_vq": true,
                 "use_pe": false,
-                "pretrained_ckpt": "ckpts/latent_codec/latent_codec_dec.bin"
-            }     
+                "pretrained_ckpt": "ckpts/latent_codec/latent_codec_dec.bin"    
+            }
         },
         "wav_codec": {
             "encoder": {
@@ -59,17 +58,17 @@
             }
         },
         "gpt_tts": {
-            "phone_vocab_size": 644,
+            "phone_vocab_size": 664,
             "target_vocab_size": 8192,
             "hidden_size": 1024,
             "intermediate_siz": 4096,
             "num_hidden_layer": 12,
             "num_attention_head": 16,
-            "pad_token_id": 8838,
-            "bos_target_id": 8839,
-            "eos_target_id": 8840,
-            "bos_phone_id": 8841,
-            "eos_phone_id": 8842,
+            "pad_token_id": 8858,
+            "bos_target_id": 8859,
+            "eos_target_id": 8860,
+            "bos_phone_id": 8861,
+            "eos_phone_id": 8862,
             "max_position_embeddings": 2048
         }
     },
@@ -77,13 +76,13 @@
     "train": {
         "max_epoch": 0,
         "use_dynamic_batchsize": true,
-        "max_tokens": 1600000,   // 1600000 = 16000 * 100 which means we use at most 100s speech for a batch
-        "max_sentences": 16,
+        "max_tokens": 5000,
+        "max_sentences": 5,
         "lr_warmup_steps": 32000,
         "lr_scheduler": "inverse_sqrt",
         "num_train_steps": 800000,
         "adam": {
-            "lr": 1e-4
+            "lr": 8e-5
         },
         "ddp": false,
         "random_seed": 114,
@@ -98,10 +97,10 @@
         "gradient_accumulation_step": 1,
         "tracker": ["tensorboard"],
         "save_checkpoint_stride": [1],
-        "keep_last": [1],
+        "keep_last": [4],
         "run_eval": [true],
         "dataloader": {
-          "num_worker": 0,
+          "num_worker": 4,
           "pin_memory": false
         }
     },

@@ -17,7 +17,7 @@ exp_config="$exp_dir/exp_config_base.json"
 exp_name="latent_codec_gpt_tts"
 
 ######## Train Model ###########
-CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES accelerate launch \
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
     "${work_dir}"/bins/tts/train.py \
     --config=$exp_config \
     --exp_name=$exp_name \

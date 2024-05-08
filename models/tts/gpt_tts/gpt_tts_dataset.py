@@ -105,37 +105,40 @@ class GPTTTSCollator(object):
         # phone_id_mask
 
         for key in batch[0].keys():
-            if key == "phone_id":
-                phone_id = [torch.LongTensor(b["phone_id"]) for b in batch]
-                phone_id_mask = [torch.ones(len(b["phone_id"])) for b in batch]
-                packed_batch_features["phone_id"] = pad_sequence(
-                    phone_id,
-                    batch_first=True,
-                    padding_value=0,
-                )
-                packed_batch_features["phone_id_mask"] = pad_sequence(
-                    phone_id_mask,
-                    batch_first=True,
-                    padding_value=0,
-                )
-            if key == "speech":
-                speech = [torch.FloatTensor(b["speech"]) for b in batch]
-                speech_mask = [
-                    torch.ones(int(len(b["speech"]) // self.cfg.preprocess.hop_size))
-                    for b in batch
-                ]
-                packed_batch_features["speech"] = pad_sequence(
-                    speech,
-                    batch_first=True,
-                    padding_value=0,
-                )
-                packed_batch_features["speech_mask"] = pad_sequence(
-                    speech_mask,
-                    batch_first=True,
-                    padding_value=0,
-                )
-            else:
-                pass
+            try:
+                if key == "phone_id":
+                    phone_id = [torch.LongTensor(b["phone_id"]) for b in batch]
+                    phone_id_mask = [torch.ones(len(b["phone_id"])) for b in batch]
+                    packed_batch_features["phone_id"] = pad_sequence(
+                        phone_id,
+                        batch_first=True,
+                        padding_value=0,
+                    )
+                    packed_batch_features["phone_id_mask"] = pad_sequence(
+                        phone_id_mask,
+                        batch_first=True,
+                        padding_value=0,
+                    )
+                if key == "speech":
+                    speech = [torch.FloatTensor(b["speech"]) for b in batch]
+                    speech_mask = [
+                        torch.ones(int(len(b["speech"]) // self.cfg.preprocess.hop_size))
+                        for b in batch
+                    ]
+                    packed_batch_features["speech"] = pad_sequence(
+                        speech,
+                        batch_first=True,
+                        padding_value=0,
+                    )
+                    packed_batch_features["speech_mask"] = pad_sequence(
+                        speech_mask,
+                        batch_first=True,
+                        padding_value=0,
+                    )
+                else:
+                    pass
+            except:
+                logger.info("Get data from oss failed.")
 
         return packed_batch_features
 

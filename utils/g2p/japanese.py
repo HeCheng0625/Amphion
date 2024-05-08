@@ -2,6 +2,10 @@
 import re
 from unidecode import unidecode
 
+'''
+    Text clean time
+'''
+
 # Regular expression matching Japanese without punctuation marks:
 _japanese_characters = re.compile(
     r'[A-Za-z\d\u3005\u3040-\u30ff\u4e00-\u9fff\uff11-\uff19\uff21-\uff3a\uff41-\uff5a\uff66-\uff9d]')
@@ -114,3 +118,37 @@ def japanese_to_ipa(text):
     for regex, replacement in _romaji_to_ipa2:
         text = re.sub(regex, replacement, text)
     return text
+
+'''
+    Phoneme merge time
+'''
+def _connect_tone(phoneme_tokens, vocab):
+
+    tone_list = ["→", "↑", "↓↑", "↓"]
+    tone_token = []
+    last_single_token = 0
+    base = 0
+    pattern = r"\[[^\[\]]*\]"  # Exclude "[" and "]"
+    for tone, idx in vocab.items():
+        if re.match(pattern, tone):
+            base = idx + 1
+        if tone in tone_list:
+            tone_token.append(idx)
+            last_single_token = idx
+
+    pre_token = None
+    cur_token = None
+    res_token = []
+    for t in phoneme_tokens:
+        cur_token = t
+        if t in tone_token:
+            cur_token = last_single_token + (pre_token - base) * len(tone_list) + tone_token.index(t) + 1
+            res_token.pop()
+        res_token.append(cur_token)
+        pre_token = t
+
+    return res_token
+
+def japanese_merge_phoneme(phoneme_tokens, vocab):
+    phoneme_tokens = _connect_tone(phoneme_tokens, vocab)
+    return phoneme_tokens

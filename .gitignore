@@ -38,6 +38,7 @@ bins/svc/demo*
 bins/svc/preprocess_custom.py
 data
 ckpts
+terminal
 
 # Data and ckpt
 *.pkl

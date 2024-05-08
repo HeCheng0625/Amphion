@@ -291,14 +291,14 @@ class NS2Trainer(TTSTrainer):
         return wav_codec_enc, latent_codec_enc, latent_codec_dec
 
     def _build_dataset(self):
-        from .gpt_tts_dataset_mls import VALLEDataset
+        from .emilia_dataset import EmiliaDataset as VALLEDataset
         return VALLEDataset, GPTTTSCollator
 
     def _build_dataloader(self):
         if self.cfg.train.use_dynamic_batchsize:
             print("Use Dynamic Batchsize......")
             Dataset, Collator = self._build_dataset()
-            train_dataset = Dataset(self.cfg.trans_exp, is_valid=False)
+            train_dataset = Dataset()
             train_collate = Collator(self.cfg)
             batch_sampler = batch_by_size(
                 train_dataset.num_frame_indices,
@@ -335,7 +335,7 @@ class NS2Trainer(TTSTrainer):
         else:
             print("Use Normal Batchsize......")
             Dataset, Collator = self._build_dataset()
-            train_dataset = Dataset(self.cfg.trans_exp, is_valid=False)
+            train_dataset = Dataset()
             train_collate = Collator(self.cfg)
 
             train_loader = DataLoader(
@@ -553,6 +553,7 @@ class NS2Trainer(TTSTrainer):
                 total_loss, train_losses, training_stats = self._train_step(batch)
             self.batch_count += 1
             ema_loss = 0.98 * ema_loss + 0.02 * self.current_loss if ema_loss is not None else self.current_loss
+            print("Terminal loss: {}".format(ema_loss))
             # Update info for each step
             # TODO: step means BP counts or batch counts?
             if self.batch_count % self.cfg.train.gradient_accumulation_step == 0:
@@ -574,7 +575,7 @@ class NS2Trainer(TTSTrainer):
                     self.save_checkpoint()
 
                 if self.accelerator.is_main_process:
-                    if self.step % 100 == 0:
+                    if self.step % 50 == 0:
                         print(f'EMA Loss: {ema_loss:.6f}')
 
         self.accelerator.wait_for_everyone()
