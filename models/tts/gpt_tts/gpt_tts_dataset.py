@@ -137,8 +137,8 @@ class GPTTTSCollator(object):
                     )
                 else:
                     pass
-            except:
-                logger.info("Get data from oss failed.")
+            except Exception as e:
+                print("Get data from oss failed: {}".format(e))
 
         return packed_batch_features
 

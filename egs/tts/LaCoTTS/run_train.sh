@@ -15,6 +15,8 @@ export PYTHONIOENCODING=UTF-8
 ######## Set Experiment Configuration ###########
 exp_config="$exp_dir/exp_config_base.json"
 exp_name="latent_codec_gpt_tts"
+checkpoint_path="$work_dir/exps/latent_codec_gpt_tts/epoch-0000_step-0002000_loss-8.778297/"
+resume_type="resume"
 
 ######## Train Model ###########
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
@@ -22,3 +24,6 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
     --config=$exp_config \
     --exp_name=$exp_name \
     --log_level debug \
+    --resume \
+    --resume_type=$resume_type \
+    --checkpoint_path=$checkpoint_path 

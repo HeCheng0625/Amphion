@@ -308,7 +308,7 @@ class NS2Trainer(TTSTrainer):
                 * self.accelerator.num_processes,
                 required_batch_size_multiple=self.accelerator.num_processes,
             )
-            np.random.seed(980209)
+            np.random.seed(987210)
             np.random.shuffle(batch_sampler)
             print(batch_sampler[:1])
             batches = [
@@ -570,13 +570,19 @@ class NS2Trainer(TTSTrainer):
 
                 self.step += 1
                 epoch_step += 1
+                if self.accelerator.sync_gradients:
+                    if self.step % self.cfg.train.save_checkpoints_steps == 0:
+                        self.accelerator.wait_for_everyone()
+                        if self.accelerator.is_main_process:
+                            try:
+                                print("Start Save.")
+                                self.save_checkpoint()
+                            except:
+                                self.logger.info("Failed to save checkpoint, resuming...")
 
-                if self.step % self.cfg.train.save_checkpoints_steps == 0:
-                    self.save_checkpoint()
-
-                if self.accelerator.is_main_process:
-                    if self.step % 50 == 0:
-                        print(f'EMA Loss: {ema_loss:.6f}')
+                    if self.accelerator.is_main_process:
+                        if self.step % 25 == 0:
+                            print(f'EMA Loss: {ema_loss:.6f}')
 
         self.accelerator.wait_for_everyone()
 
