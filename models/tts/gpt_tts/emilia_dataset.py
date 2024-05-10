@@ -57,7 +57,7 @@ class EmiliaDataset(Dataset):
             logger.info("No cache exists")
             if from_database:
                 # Load path from database
-                self.get_all_paths_from_database(language="zh", duration_limit=2, filtered=False) # 200 hours
+                self.get_all_paths_from_database(language="zh", duration_limit=0.2, filtered=False) # 200 hours
                 # If need other language, change language and call it again
             else:
                 # Load path from oss one by one
@@ -111,25 +111,35 @@ class EmiliaDataset(Dataset):
 
     def get_path_from_database(self, path, num_wav, idx=None):
         json_path = path.split(bucket_name)[1][1:]
+        logger.info("Get json from {}".format(path))
         self.json_paths.append(json_path)
         audio_name = json_path.split(".json")[0]
+        is_mp3 = True if 'mp3' in json_path else False
         if idx is None:
             for i in range(num_wav):
                 wav_path = audio_name + "_" + str(i) + ".wav"
                 mp3_path = audio_name + "_" + str(i) + ".mp3"
-                if self.bucket.object_exists(wav_path):
-                    self.wav_paths.append(wav_path)
-                else:
-                    self.wav_paths.append(mp3_path)
+                try:
+                    if is_mp3 or self.bucket.object_exists(mp3_path):
+                        self.wav_paths.append(mp3_path)
+                    else:
+                        self.wav_paths.append(wav_path)
+                except oss2.exceptions.NoSuchKey:
+                    continue
+                except oss2.exceptions.OssError as e:
+                    continue
         else:
             idx = idx.split(',')
             for x in idx:
-                wav_path = audio_name + "_" + str(x) + ".wav"
-                mp3_path = audio_name + "_" + str(x) + ".mp3"
-                if self.bucket.object_exists(wav_path):
-                    self.wav_paths.append(wav_path)
-                else:
-                    self.wav_paths.append(mp3_path)
+                try:
+                    wav_path = audio_name + "_" + str(x) + ".wav"
+                    mp3_path = audio_name + "_" + str(x) + ".mp3"
+                    if is_mp3 or self.bucket.object_exists(mp3_path):
+                        self.wav_paths.append(mp3_path)
+                    else:
+                        self.wav_paths.append(wav_path)
+                except oss2.exceptions.NoSuchKey:
+                    continue
 
     def get_all_paths_from_database(self, language, duration_limit, filtered=False):
         logger.info("Start to get all paths")
@@ -147,7 +157,8 @@ class EmiliaDataset(Dataset):
             num_per_page = 2
             duration_limit = duration_limit * 3600
  
-            while tmp_duration <= duration_limit:
+            logger.info("Get paths from database")
+            while tmp_duration < duration_limit:
 
                 if not filtered:
                     cursor.execute(
@@ -276,8 +287,8 @@ class EmiliaDataset(Dataset):
                     self.json_path2meta[json_path] = json_cache
             except oss2.exceptions.NoSuchKey as e:
                 logger.info(
-                    "{0} not found: http_status={1}, request_id={2}".format(
-                        self.file_key, e.status, e.request_id
+                    "Not found: http_status={1}, request_id={2}".format(
+                        e.status, e.request_id
                     )
                 )
                 error_path.append(json_path)
