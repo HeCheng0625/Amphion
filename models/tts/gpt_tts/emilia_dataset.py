@@ -270,40 +270,42 @@ class EmiliaDataset(Dataset):
         return self.wav_paths.__len__()
 
     def __getitem__(self, idx):
+
+        # 根据索引 idx 返回数据
+        wav_path = self.wav_paths[
+            idx
+        ]  # qianyi/raw/xima_processed/xmly00000_10028458_47798215_0.wav"
         try:
-            # 根据索引 idx 返回数据
-            wav_path = self.wav_paths[
-                idx
-            ]  # qianyi/raw/xima_processed/xmly00000_10028458_47798215_0.wav"
             for i in range(3):
                 try:
                     file_bytes = self.bucket.get_object(wav_path)
                     break
                 except Exception as e:
                     print(f"[Filter meta func] Error is {e}")
-                    time.sleep(0.1 * i)
+                    time.sleep(0.05 * i)
                     print("retry")
-            buffer = io.BytesIO(file_bytes.read())
-            speech, _ = librosa.load(buffer, sr=16000) # 24000是采样率，这个可以根据实际情况调整
-            # # resample to 16k
-            # speech = librosa.resample(speech, orig_sr=24000, target_sr=16000)
-
-            shape = speech.shape
-            pad_shape = ((shape[0] // 200) + 1) * 200 - shape[0]
-            speech = np.pad(speech, (0, pad_shape), mode='constant')
-
-            del buffer, pad_shape, shape
-            speech_tensor = torch.tensor(speech, dtype=torch.float32)
-            meta = self.get_meta_from_wav_path(wav_path) # 获取对应的meta信息
-            phone_id = self.g2p(meta['text'], meta['language'])[1]
-            phone_id = torch.tensor([int(i) for i in phone_id], dtype=torch.long)
-            phone_id = torch.cat([torch.tensor(LANG2CODE[meta['language']], dtype=torch.long).reshape(1), phone_id]) # add language token
-            return dict(
-                speech=speech_tensor,
-                phone_id=phone_id,
-            )
         except:
-            logger.info("Get data from oss failed.")
+            logger.info("Get data from oss failed. Get another.")
+            return self.__getitem__(np.random.randint(0, len(self) - 1))
+        buffer = io.BytesIO(file_bytes.read())
+        speech, _ = librosa.load(buffer, sr=16000) # 24000是采样率，这个可以根据实际情况调整
+        # # resample to 16k
+        # speech = librosa.resample(speech, orig_sr=24000, target_sr=16000)
+
+        shape = speech.shape
+        pad_shape = ((shape[0] // 200) + 1) * 200 - shape[0]
+        speech = np.pad(speech, (0, pad_shape), mode='constant')
+
+        del buffer, pad_shape, shape
+        speech_tensor = torch.tensor(speech, dtype=torch.float32)
+        meta = self.get_meta_from_wav_path(wav_path) # 获取对应的meta信息
+        phone_id = self.g2p(meta['text'], meta['language'])[1]
+        phone_id = torch.tensor([int(i) for i in phone_id], dtype=torch.long)
+        phone_id = torch.cat([torch.tensor(LANG2CODE[meta['language']], dtype=torch.long).reshape(1), phone_id]) # add language token
+        return dict(
+            speech=speech_tensor,
+            phone_id=phone_id,
+        )
 
 
 if __name__ == '__main__':

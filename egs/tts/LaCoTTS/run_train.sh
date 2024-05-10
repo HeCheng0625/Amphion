@@ -15,7 +15,7 @@ export PYTHONIOENCODING=UTF-8
 ######## Set Experiment Configuration ###########
 exp_config="$exp_dir/exp_config_base.json"
 exp_name="latent_codec_gpt_tts"
-checkpoint_path="$work_dir/exps/latent_codec_gpt_tts/epoch-0000_step-0002000_loss-8.778297/"
+checkpoint_path="$work_dir/exps/latent_codec_gpt_tts/epoch-0001_step-0003500_loss-8.438218/"
 resume_type="resume"
 
 ######## Train Model ###########
