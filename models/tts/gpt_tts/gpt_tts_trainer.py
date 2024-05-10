@@ -215,10 +215,7 @@ class NS2Trainer(TTSTrainer):
                     checkpoint_dir=self.checkpoint_dir, resume_type=args.resume_type
                 )
                 end = time.monotonic_ns()
-                print(
-                    f"Resuming from checkpoint done in {(end - start) / 1e6:.2f}ms"
-                )
-                
+                print(f"Resuming from checkpoint done in {(end - start) / 1e6:.2f}ms")
 
         # save config file path
         self.config_save_path = os.path.join(self.exp_dir, "args.json")
@@ -227,6 +224,7 @@ class NS2Trainer(TTSTrainer):
         self.task_type = "TTS"
         if self.accelerator.is_main_process:
             self.logger.info("Task type: {}".format(self.task_type))
+
     def _count_parameters(self, model):
         model_param = 0.0
         if isinstance(model, dict):
@@ -235,6 +233,7 @@ class NS2Trainer(TTSTrainer):
         else:
             model_param = sum(p.numel() for p in model.parameters())
         return model_param
+
     def _init_accelerator(self):
         self.exp_dir = os.path.join(
             os.path.abspath(self.cfg.log_dir), self.args.exp_name
@@ -270,10 +269,15 @@ class NS2Trainer(TTSTrainer):
         # wav_codec_enc.load_state_dict(torch.load("ckpts/wav_codec/wav_codec_enc.bin"))
         # latent_codec_enc.load_state_dict(torch.load("ckpts/latent_codec/latent_codec_enc.bin"))
         # latent_codec_dec.load_state_dict(torch.load("ckpts/latent_codec/latent_codec_dec.bin"))
-        wav_codec_enc.load_state_dict(torch.load(self.cfg.model.wav_codec.encoder.pretrained_ckpt))
-        latent_codec_enc.load_state_dict(torch.load(self.cfg.model.latent_codec.encoder.pretrained_ckpt))
-        latent_codec_dec.load_state_dict(torch.load(self.cfg.model.latent_codec.decoder.pretrained_ckpt))
-
+        wav_codec_enc.load_state_dict(
+            torch.load(self.cfg.model.wav_codec.encoder.pretrained_ckpt)
+        )
+        latent_codec_enc.load_state_dict(
+            torch.load(self.cfg.model.latent_codec.encoder.pretrained_ckpt)
+        )
+        latent_codec_dec.load_state_dict(
+            torch.load(self.cfg.model.latent_codec.decoder.pretrained_ckpt)
+        )
 
         wav_codec_enc.eval()
         latent_codec_enc.eval()
@@ -292,6 +296,7 @@ class NS2Trainer(TTSTrainer):
 
     def _build_dataset(self):
         from .gpt_tts_dataset_mls import VALLEDataset
+
         return VALLEDataset, GPTTTSCollator
 
     def _build_dataloader(self):
@@ -347,7 +352,7 @@ class NS2Trainer(TTSTrainer):
                 pin_memory=self.cfg.train.dataloader.pin_memory,
             )
 
-            valid_loader=None
+            valid_loader = None
             self.accelerator.wait_for_everyone()
 
         return train_loader, valid_loader
@@ -552,7 +557,11 @@ class NS2Trainer(TTSTrainer):
             with self.accelerator.accumulate(self.model):
                 total_loss, train_losses, training_stats = self._train_step(batch)
             self.batch_count += 1
-            ema_loss = 0.98 * ema_loss + 0.02 * self.current_loss if ema_loss is not None else self.current_loss
+            ema_loss = (
+                0.98 * ema_loss + 0.02 * self.current_loss
+                if ema_loss is not None
+                else self.current_loss
+            )
             # Update info for each step
             # TODO: step means BP counts or batch counts?
             if self.batch_count % self.cfg.train.gradient_accumulation_step == 0:
@@ -575,11 +584,12 @@ class NS2Trainer(TTSTrainer):
 
                 if self.accelerator.is_main_process:
                     if self.step % 100 == 0:
-                        print(f'EMA Loss: {ema_loss:.6f}')
+                        print(f"EMA Loss: {ema_loss:.6f}")
 
         self.accelerator.wait_for_everyone()
 
         return epoch_sum_loss, epoch_losses
+
     def save_checkpoint(self):
         if self.accelerator.is_main_process:
             keep_last = self.keep_last[0]
@@ -590,7 +600,9 @@ class NS2Trainer(TTSTrainer):
             all_ckpts = list(all_ckpts)
             if len(all_ckpts) > keep_last:
                 # 只保留keep_last个的folder in self.checkpoint_dir, sort by step  "epoch-{:04d}_step-{:07d}_loss-{:.6f}"
-                all_ckpts = sorted(all_ckpts, key=lambda x: int(x.split("_")[1].split('-')[1]))
+                all_ckpts = sorted(
+                    all_ckpts, key=lambda x: int(x.split("_")[1].split("-")[1])
+                )
                 for ckpt in all_ckpts[:-keep_last]:
                     shutil.rmtree(os.path.join(self.checkpoint_dir, ckpt))
             checkpoint_filename = "epoch-{:04d}_step-{:07d}_loss-{:.6f}".format(
@@ -600,6 +612,7 @@ class NS2Trainer(TTSTrainer):
             self.logger.info("Saving state to {}...".format(path))
             self.accelerator.save_state(path)
             self.logger.info("Finished saving state.")
+
     def train_loop(self):
         r"""Training loop. The public entry of training process."""
         # Wait everyone to prepare before we move on
@@ -629,7 +642,7 @@ class NS2Trainer(TTSTrainer):
                         step=self.epoch,
                     )
 
-            valid_total_loss, valid_losses = 0.,0.
+            valid_total_loss, valid_losses = 0.0, 0.0
             # if isinstance(valid_losses, dict):
             #     for key, loss in valid_losses.items():
             #         if self.accelerator.is_main_process:

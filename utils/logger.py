@@ -2,6 +2,7 @@ import logging
 import time
 import os
 
+
 def init_logger(name):
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
@@ -15,7 +16,7 @@ def init_logger(name):
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
-    fh = logging.FileHandler(f'logs/{log_date}/{log_time}.log')
+    fh = logging.FileHandler(f"logs/{log_date}/{log_time}.log")
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
@@ -31,7 +32,6 @@ def init_logger(name):
             elif record.levelno >= logging.DEBUG:
                 record.msg = "\033[1;32m" + str(record.msg) + "\033[0m"
             return super().format(record)
-        
 
     color_formatter = ColorFormatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
