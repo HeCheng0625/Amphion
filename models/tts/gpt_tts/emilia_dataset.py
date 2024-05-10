@@ -1,4 +1,5 @@
 import oss2 #pip install oss2
+from mysql.connector.pooling import MySQLConnection # pip install mysql-connector-python
 import io
 import librosa
 import torch
@@ -29,33 +30,69 @@ lang2token = {
 # 示例用法
 
 class EmiliaDataset(Dataset):
-    def __init__(self, access_key_id=AK, access_key_secret=SK, bucket_name=bucket_name, resample_to_16k=False):
+    def __init__(self, 
+                access_key_id=AK, 
+                access_key_secret=SK, 
+                bucket_name=bucket_name, 
+                resample_to_16k=False, 
+                from_database=True):
         # Initialize OSS client
         self.init_client(access_key_id, access_key_secret, bucket_name) # 建立连接
+        self.text_tokenizer = PhonemeBpeTokenizer()
         self.json_paths = []
         self.wav_paths = []
         self.json_path2meta = {}
+        self.path_is_filtered = False
         # Load paths from cache files if available, otherwise get them from OSS
-        if os.path.exists("wav_paths_cache.pkl") and os.path.exists("json_paths_cache.pkl"):
-            self.load_cached_paths()
+        wav_paths_cache = "wav_paths_cache.pkl"
+        filtered_wav_paths_cache = "filtered_wav_paths_cache.pkl"
+        json_paths_cache = "json_paths_cache.pkl"
+        json_path2meta = "json_path2meta.pkl"
+        if os.path.exists(filtered_wav_paths_cache) and os.path.exists(json_paths_cache):
+            self.load_cached_paths(filtered_wav_paths_cache, json_paths_cache)
+            self.path_is_filtered = True
+        elif os.path.exists(wav_paths_cache) and os.path.exists(json_paths_cache):
+            self.load_cached_paths(wav_paths_cache, json_paths_cache)
         else:
-            self.get_all_paths(language='zh', duration_limit=200) # 200 hours
+            logger.info("No cache exists")
+            if from_database:
+                # Load path from database
+                self.get_all_paths_from_database(language="zh", duration_limit=2, filtered=False) # 200 hours
+                # If need other language, change language and call it again
+            else:
+                # Load path from oss one by one
+                self.get_all_paths_form_oss(folder_path="qianyi/raw/xima_processed/", num_limit=100000) 
+                # If need other folder_path, change folder_path and call it again
             self.save_cached_paths()
-        if os.path.exists("json_path2meta.pkl"):
-            self.json_path2meta = pickle.load(open("json_path2meta.pkl", "rb"))
+                
+        self.wav_path_index2duration = []
+        self.wav_path_index2phonelen = []
+        self.index2num_frames = []
+
+        if os.path.exists(json_path2meta):
+            self.load_path2meta(json_path2meta)
         else:
             self.get_jsoncache()
-        # self.json_path2meta
-        self.filter_by_meta()
+        
+        if not self.path_is_filtered:
+            self.filter_by_meta()
         
         self.num_frame_indices = np.array(sorted(range(len(self.index2num_frames)), key=lambda k: self.index2num_frames[k]))
 
-        self.text_tokenizer = PhonemeBpeTokenizer()
 
-    def load_cached_paths(self):
-        with open("wav_paths_cache.pkl", "rb") as f:
+    def init_client(self, access_key_id, access_key_secret, bucket_name):
+        # 初始化 OSS 客户端
+        logger.info("Start to initialize OSS client")
+        self.auth = oss2.Auth(access_key_id, access_key_secret)
+        self.bucket = oss2.Bucket(
+            self.auth, "https://oss-cn-beijing.aliyuncs.com", bucket_name
+        )
+        logger.info("OSS client initialized successfully")
+    
+    def load_cached_paths(self, wav_paths_cache, json_paths_cache):
+        with open(wav_paths_cache, "rb") as f:
             self.wav_paths = pickle.load(f)
-        with open("json_paths_cache.pkl", "rb") as f:
+        with open(json_paths_cache, "rb") as f:
             self.json_paths = pickle.load(f)
         logger.info("Loaded paths from cache files")
         logger.info("All paths got successfully")
@@ -70,75 +107,94 @@ class EmiliaDataset(Dataset):
             pickle.dump(self.wav_paths, f)
         with open("json_paths_cache.pkl", "wb") as f:
             pickle.dump(self.json_paths, f)
-        logger.info("Saved paths to cache files") 
+        logger.info("Saved paths to cache files")
 
-    def init_client(self, access_key_id, access_key_secret, bucket_name):
-        # 初始化 OSS 客户端
-        logger.info("Start to initialize OSS client")
-        self.auth = oss2.Auth(access_key_id, access_key_secret)
-        self.bucket = oss2.Bucket(
-            self.auth, "https://oss-cn-beijing.aliyuncs.com", bucket_name
-        )
-        logger.info("OSS client initialized successfully")
-
-
-    def get_paths(self, path, num_wav):
-        json_path = MOUNT_PATH + bucket_name + '/' + path.split(bucket_name)[1]
+    def get_path_from_database(self, path, num_wav, idx=None):
+        json_path = path.split(bucket_name)[1][1:]
         self.json_paths.append(json_path)
-        for i in range(num_wav):
-            wav_path = json_path.split(".json")[0] + "_" + i + ".wav" # maybe '.mp3' in the furture
-            self.wav_paths.append(wav_path)
+        audio_name = json_path.split(".json")[0]
+        if idx is None:
+            for i in range(num_wav):
+                wav_path = audio_name + "_" + str(i) + ".wav"
+                mp3_path = audio_name + "_" + str(i) + ".mp3"
+                if self.bucket.object_exists(wav_path):
+                    self.wav_paths.append(wav_path)
+                else:
+                    self.wav_paths.append(mp3_path)
+        else:
+            idx = idx.split(',')
+            for x in idx:
+                wav_path = audio_name + "_" + str(x) + ".wav"
+                mp3_path = audio_name + "_" + str(x) + ".mp3"
+                if self.bucket.object_exists(wav_path):
+                    self.wav_paths.append(wav_path)
+                else:
+                    self.wav_paths.append(mp3_path)
 
-    def get_all_paths(self, language, duration_limit):
+    def get_all_paths_from_database(self, language, duration_limit, filtered=False):
         logger.info("Start to get all paths")
-        from mysql.connector.pooling import MySQLConnection
         from AudioDataCollection.database.db_manager import DatabaseManager
-
         db_manager = DatabaseManager()
         try:
             conn: MySQLConnection = db_manager.get_connection()
             # 开启事务
             conn.start_transaction()
-
             cursor = conn.cursor()
 
+            logger.info("Connect database successfully")
             tmp_duration = 0
             page = 0
-            num_per_page = 10
+            num_per_page = 2
             duration_limit = duration_limit * 3600
+ 
             while tmp_duration <= duration_limit:
 
-                cursor.execute(
-                    f"""
-                    SELECT result_path, valid_duration, valid_segement
-                    FROM video
-                    WHERE 'language' = {language} AND 'status' = 4
-                    LIMIT {page * num_per_page}, {num_per_page}
-                """
-                )
+                if not filtered:
+                    cursor.execute(
+                        f"""
+                        SELECT result_path, valid_duration, valid_segement
+                        FROM video
+                        WHERE language = '{language}' AND status = 4
+                        LIMIT {page * num_per_page}, {num_per_page}
+                        """
+                    )
 
-                record = cursor.fetchall()
+                    record = cursor.fetchall()
+                    if record is None:
+                        conn.rollback()
+                        continue
+                    
+                    for single_record in record:
+                        path, duration, num_wav = single_record
+                        self.get_path_from_database(path, num_wav)
+                        tmp_duration += duration
+                else:
+                    cursor.execute(
+                        f"""
+                            SELECT result_path, filtered_duration, filtered_segement, filtered_idx
+                            FROM video
+                            WHERE language = '{language}' AND status = 4
+                            LIMIT {page * num_per_page}, {num_per_page}
+                        """
+                        )
 
-                if record is None:
-                    conn.rollback()
-                    continue
+                    record = cursor.fetchall()
+                    if record is None:
+                        conn.rollback()
+                        continue
 
-                # result_path, valid_duration, valid_segement = record
-
-                for path, duration, num_wav in record:
-
-                    self.get_paths(path, num_wav)
-                    tmp_duration += duration
-
+                    for single_record in record:
+                        path, duration, num_wav, idx = single_record
+                        self.get_path_from_database(path, num_wav, idx)
+                        tmp_duration += duration
                 page += 1
                 
-                logger.info("All paths got successfully")
-                # num wavs, num jsons
-                logger.info(
-                    "Number of wavs: %d, Number of jsons: %d"
-                    % (len(self.wav_paths), len(self.json_paths))
-                )
-
+            logger.info("All paths got successfully")
+            # num wavs, num jsons
+            logger.info(
+                "Number of wavs: %d, Number of jsons: %d"
+                % (len(self.wav_paths), len(self.json_paths))
+            )
         except Exception as e:
             # 发生错误时回滚事务
             conn.rollback()
@@ -148,20 +204,40 @@ class EmiliaDataset(Dataset):
             if conn:
                 conn.close()
 
-
-    def get_meta_from_wav_path(self, wav_path):
-        index = int(wav_path.split("_")[-1].split(".")[0])  # 0
-        audio_name = "_".join(wav_path.split("/")[-1].split("_")[:-1])
-        dir_name = "/".join(wav_path.split("/")[:-1])
-        json_name = audio_name + ".json"  # xmly00000_10028458_47798215.json
-        json_path = dir_name + "/" + json_name
-        meta = self.json_path2meta[json_path][index]
-        return meta 
+    def get_all_paths_form_oss(self, folder_path, num_limit):
+        logger.info("Start to get all paths")
+        # 这个每次重启需要重新遍历一遍，要花一些时间，可以考虑把把所有wav和json的路径保存到一个文件中，下次直接读取
+        counter = 0
+        logger.info("Folder path: {}".format(folder_path))
+        for obj in oss2.ObjectIterator(self.bucket, prefix=folder_path):
+            if obj.key.endswith(".json"):
+                self.json_paths.append(obj.key)
+                counter += 1
+            elif obj.key.endswith( ".wav"):
+                self.wav_paths.append(obj.key)
+                counter += 1
+            elif obj.key.endswith( ".mp3"):
+                self.wav_paths.append(obj.key)
+                counter += 1
+            if counter > num_limit:  # this is just for testing
+                logger.info("More than {}".format(counter))
+                break
+        logger.info("All paths got successfully")
+        logger.info(
+            "Number of wavs: %d, Number of jsons: %d"
+            % (len(self.wav_paths), len(self.json_paths))
+        )
 
     def get_bounds(self, meta):
         avg_durations = []
         for m in meta:
-            phone_count = len(m['phone_id'].split())
+            phone_count = 0
+            if 'phone_id' in m:
+                phone_count = len(m['phone_id'].split())
+            else:
+                phone_id = self.g2p(m['text'], m['language'])[1]
+                phone_count = len(phone_id)
+                m['phone_id'] = " ".join(map(str, phone_id))
             duration = m['end'] - m['start']
             try:
                 avg_durations.append(duration / phone_count)
@@ -174,18 +250,21 @@ class EmiliaDataset(Dataset):
         upper_bound = q3 + 1.5 * iqr
         # 写进meta
         for m in meta:
+            m['phone_count'] = phone_count
+            m['duration'] = duration
             m['lower_bound'] = lower_bound
             m['upper_bound'] = upper_bound
         return meta
 
     def get_jsoncache(self):
         logger.info("Start to get json cache")
+        error_path = []  # 用于存储需要删除的元素
         for json_path in tqdm.tqdm(self.json_paths):
             try:
                 file_bytes = self.bucket.get_object(json_path)
                 buffer = io.BytesIO(file_bytes.read())
                 json_cache = json.load(buffer)
-                del buffer
+                del buffer, file_bytes
                 if json_cache is None:
                     logger.info("json is none")
                     continue
@@ -193,30 +272,47 @@ class EmiliaDataset(Dataset):
                     logger.info("json is none")
                     continue
                 else:
-                    logger.info(json_path)
                     json_cache = self.get_bounds(json_cache)
                     self.json_path2meta[json_path] = json_cache
             except oss2.exceptions.NoSuchKey as e:
-                print(
+                logger.info(
                     "{0} not found: http_status={1}, request_id={2}".format(
                         self.file_key, e.status, e.request_id
                     )
                 )
-                return None
+                error_path.append(json_path)
+                continue
+        logger.info("Remove error path")
+        for error in error_path:
+            self.json_paths.remove(error)
         # write to cache file
         with open("json_path2meta.pkl", "wb") as f:
             pickle.dump(self.json_path2meta, f)
         logger.info("Json cache write to json_path2meta.pkl successfully")
- 
+
+    def get_meta_from_wav_path(self, wav_path):
+        index = int(wav_path.split("_")[-1].split(".")[0])  # 0
+        audio_name = "_".join(wav_path.split("/")[-1].split("_")[:-1])
+        dir_name = "/".join(wav_path.split("/")[:-1])
+        json_name = audio_name + ".json"  # xmly00000_10028458_47798215.json
+        json_path = dir_name + "/" + json_name
+        meta = self.json_path2meta[json_path][index]
+        return meta 
+
+    def load_path2meta(self, path2meta):
+        self.json_path2meta = pickle.load(open(path2meta, "rb"))
+        for path in self.wav_paths:
+            duration = self.get_meta_from_wav_path(path)['duration']
+            phone_count = self.get_meta_from_wav_path(path)['phone_count']
+            
+            self.wav_path_index2duration.append(duration)
+            self.wav_path_index2phonelen.append(phone_count)
+            self.index2num_frames.append(duration * 80 + phone_count)
+
     def filter_by_meta(self):
         # Filter out the data with 'remove' field in meta set to True
-        # 从数据集中删除 remove 字段设置为 True 的数据
         logger.info("Start to filter data by meta")
         wav_paths_filtered = []
-        self.wav_path2duration = {}
-        self.wav_path_index2duration = {}
-        self.wav_path_index2phonelen = {}
-        self.index2num_frames = []
         valid_duration = 0.0
         all_duration = 0.0
         for wav_path in tqdm.tqdm(self.wav_paths):
@@ -226,31 +322,38 @@ class EmiliaDataset(Dataset):
                 continue
             duration = meta["end"] - meta["start"]
             all_duration += duration
+            phone_count = len(meta['phone_id'].split())
             # filter by dns mos
+            if 'remove' in meta:
+                if meta['remove'] == 'true':
+                    continue
             if meta["mos"]["dnsmos"] < 3:
                 continue
             if duration < 3 or duration > 30:
                 continue
             # filter by phone duration
-            phone_count = len(meta['phone_id'].split())
             if phone_count <= 5:
                 continue
             avg_duration = duration / phone_count
             if avg_duration < meta['lower_bound'] or avg_duration > meta['upper_bound']:
                 continue
-            self.wav_path2duration[wav_path] = duration
             wav_paths_filtered.append(wav_path)
-            self.wav_path_index2duration[len(wav_paths_filtered)-1] = duration
-            self.wav_path_index2phonelen[len(wav_paths_filtered)-1] = phone_count
+            self.wav_path_index2duration.append(duration)
+            self.wav_path_index2phonelen.append(phone_count)
             valid_duration += duration
-            self.index2num_frames.append(duration * 75 + phone_count)
+            self.index2num_frames.append(duration * 80 + phone_count)
         # 保存过滤后的所有的wavpath
         self.wav_paths = wav_paths_filtered # 这个也可以考虑保存到文件中，下次直接读取
+        # write to cache file
+        if not os.path.exists("filtered_wav_paths_cache.pkl"):
+            with open("filtered_wav_paths_cache.pkl", "wb") as f:
+                pickle.dump(self.wav_paths, f)
         # valid duration in hours
         logger.info("Valid duration: %.2f hours" % (all_duration / 3600)) #700
         logger.info("Filtered duration: %.2f hours" % (valid_duration / 3600)) #500
         logger.info("Data filtered successfully")
         logger.info("Number of wavs after filtering: %d" % len(self.wav_paths))
+        del wav_paths_filtered, all_duration, valid_duration
 
     def g2p(self, text, language):
         
@@ -264,7 +367,7 @@ class EmiliaDataset(Dataset):
     
     def get_num_frames(self, index):
         return self.wav_path_index2duration[index] * 80 + self.wav_path_index2phonelen[index]
-
+        
     def __len__(self):
         # 返回数据集的长度
         return self.wav_paths.__len__()
@@ -311,7 +414,7 @@ class EmiliaDataset(Dataset):
 if __name__ == '__main__':
     # 创建数据集实例
     dataset = EmiliaDataset(AK, SK, bucket_name)
-    dataset.bucket.get_object("qianyi/raw/xima_processed/xmly00000_259276_4534001/xmly00000_259276_4534001_27.wav")
+    print(dataset.__getitem__(0))
     # Test loading a specific item from the dataset
     # for idx in tqdm.tqdm(range(len(dataset))):
     #     batch = dataset[idx]
