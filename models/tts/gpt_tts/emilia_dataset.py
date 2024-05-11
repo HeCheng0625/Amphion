@@ -79,7 +79,7 @@ class EmiliaDataset(Dataset):
         if os.path.exists(json_path2meta):
             self.load_path2meta(json_path2meta)
         else:
-            self.get_jsoncache(self.cache_limit)
+            self.get_jsoncache()
         
         if not self.path_is_filtered:
             self.filter_by_meta()

@@ -312,6 +312,7 @@ def chinese_to_bopomofo(text):
     from pypinyin import lazy_pinyin, BOPOMOFO
     text = text.replace('、', '，').replace('；', '，').replace('：', '，')
     words = jieba.lcut(text, cut_all=False)
+    text = re.sub(r"\s+", "", text)
     text = ''
     for word in words:
         bopomofos = lazy_pinyin(word, BOPOMOFO)
