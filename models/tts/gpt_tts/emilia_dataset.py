@@ -16,15 +16,19 @@ logging.basicConfig(level=logging.INFO)  # Configure logging level to INFO
 logger = logging.getLogger(__name__)
 
 LANG2CODE = {
-    'en': 655,
     'zh': 654,
+    'en': 655,
+    'ja': 656,
+    'kr': 657,
+    'fr': 658,
+    'de': 659,
 }
 lang2token = {
     'zh': "[ZH]",
-    'ja': "[JA]",
     "en": "[EN]",
-    "fr": "[FR]",
+    'ja': "[JA]",
     "kr": "[KR]",
+    "fr": "[FR]",
     "de": "[DE]",
 }
 # 示例用法
