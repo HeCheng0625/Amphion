@@ -71,10 +71,11 @@ class EmiliaDataset(Dataset):
         self.wav_path_index2phonelen = []
         self.index2num_frames = []
 
+        self.cache_limit = 10000 # josn2meta cache
         if os.path.exists(json_path2meta):
             self.load_path2meta(json_path2meta)
         else:
-            self.get_jsoncache()
+            self.get_jsoncache(self.cache_limit)
         
         if not self.path_is_filtered:
             self.filter_by_meta()
@@ -249,9 +250,11 @@ class EmiliaDataset(Dataset):
                 phone_count = len(m['phone_id'].split())
             else:
                 phone_id = self.g2p(m['text'], m['language'])[1]
-                phone_count = len(phone_id)
                 m['phone_id'] = " ".join(map(str, phone_id))
+                phone_count = len(phone_id)
+                m['phone_count'] = phone_count
             duration = m['end'] - m['start']
+            m['duration'] = duration
             try:
                 avg_durations.append(duration / phone_count)
             except:
@@ -262,9 +265,7 @@ class EmiliaDataset(Dataset):
         lower_bound = q1 - 1.5 * iqr
         upper_bound = q3 + 1.5 * iqr
         # 写进meta
-        for m in meta:
-            m['phone_count'] = phone_count
-            m['duration'] = duration
+        for m in meta: 
             m['lower_bound'] = lower_bound
             m['upper_bound'] = upper_bound
         return meta
