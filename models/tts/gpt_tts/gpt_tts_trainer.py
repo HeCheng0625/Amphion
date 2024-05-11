@@ -139,9 +139,11 @@ class NS2Trainer(TTSTrainer):
                 )
 
         # setup wav codec encoder, latent codec encoder, latent codec decoder
-        self.wav_codec_enc, self.latent_codec_enc, self.latent_codec_dec = (
-            self._build_codec()
-        )
+        (
+            self.wav_codec_enc,
+            self.latent_codec_enc,
+            self.latent_codec_dec,
+        ) = self._build_codec()
 
         # optimizer & scheduler
         with self.accelerator.main_process_first():
@@ -260,7 +262,6 @@ class NS2Trainer(TTSTrainer):
         return model
 
     def _build_codec(self):
-
         wav_codec_enc = CodecEncoder(cfg=self.cfg.model.wav_codec.encoder)
         latent_codec_enc = LatentCodecEncoder(cfg=self.cfg.model.latent_codec.encoder)
         latent_codec_dec = LatentCodecDecoderWithTimbre(

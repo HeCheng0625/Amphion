@@ -1,7 +1,7 @@
 # [{"wav_path": ...,
 # "transcript":...,
-# "gender":..., 
-# "class": background, 
+# "gender":...,
+# "class": background,
 # "background": ...,
 # "target": [{"reply": ...}]}]
 
@@ -13,9 +13,10 @@ import json
 import ast
 import os
 
+
 def is_json(myjson):
-  try:
-    json.loads(myjson)
-  except ValueError as e:
-    return False
-  return True
+    try:
+        json.loads(myjson)
+    except ValueError as e:
+        return False
+    return True

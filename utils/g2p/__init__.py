@@ -8,7 +8,6 @@ import re
 
 
 class PhonemeBpeTokenizer:
-
     def __init__(self, tokenizer_path="./utils/g2p/bpe_613.json"):
         self.tokenizer = Tokenizer.from_file(tokenizer_path)
         self.tokenizer_path = tokenizer_path
@@ -19,7 +18,6 @@ class PhonemeBpeTokenizer:
         self.vocab = data["model"]["vocab"]
 
     def tokenize(self, text, language):
-
         # 1. convert text to phoneme
         phonemes = _clean_text(text, ["cje_cleaners"])
         # print('clean text: ', phonemes)
@@ -51,7 +49,6 @@ class PhonemeBpeTokenizer:
 
 
 def _clean_text(text, cleaner_names):
-
     for name in cleaner_names:
         cleaner = getattr(utils.g2p.cleaners, name)
         if not cleaner:
@@ -111,7 +108,6 @@ def _connect_phone(phoneme_tokens):
 
 
 def _connect_tone(phoneme_tokens, vocab):
-
     tone_list = ["→", "↑", "↓↑", "↓"]
     tone_token = []
     last_single_token = 0

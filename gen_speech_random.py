@@ -21,7 +21,6 @@ from utils.util import load_config
 
 
 def set_model():
-
     cfg = load_config("egs/tts/LaCoTTS/exp_config_base.json")
 
     wav_codec_enc = CodecEncoder(cfg=cfg.model.wav_codec.encoder)
@@ -136,19 +135,34 @@ def gen_speech(
 
 
 if __name__ == "__main__":
-
     # set model
-    wav_codec_enc, wav_codec_dec, latent_codec_enc, latent_codec_dec, gpt_tts = (
-        set_model()
-    )
-    
+    (
+        wav_codec_enc,
+        wav_codec_dec,
+        latent_codec_enc,
+        latent_codec_dec,
+        gpt_tts,
+    ) = set_model()
+
     g2p = G2p()
-    
+
     speech_data = prepare_prompt_json()
     target_text = "What is the UV index like today?"
 
     for i in range(10):
         wav, text = get_random_prompt(speech_data)
-        gen_wav, _ = gen_speech(wav, text, target_text, g2p, wav_codec_enc, wav_codec_dec, latent_codec_enc, latent_codec_dec, gpt_tts)
-        target_path = "/home/t-zeqianju/yuancwang/Amphion/temp_wavs/recon/{}.wav".format(str(i))
+        gen_wav, _ = gen_speech(
+            wav,
+            text,
+            target_text,
+            g2p,
+            wav_codec_enc,
+            wav_codec_dec,
+            latent_codec_enc,
+            latent_codec_dec,
+            gpt_tts,
+        )
+        target_path = (
+            "/home/t-zeqianju/yuancwang/Amphion/temp_wavs/recon/{}.wav".format(str(i))
+        )
         sf.write(target_path, gen_wav, 16000)

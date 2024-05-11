@@ -1,0 +1,64 @@
+```json
+[
+  {
+    "text": "Is it safe to talk while driving?",
+    "background": "driving and traffic",
+    "reply": [
+      "It's safer to use hands-free devices if you need to talk while driving. Can I assist you with activating one?",
+      "Talking directly on your phone can be distracting. Would you like me to help you set up a voice command feature?",
+      "Keeping your attention on the road is crucial. Let's keep our conversation brief or wait until you've parked. How does that sound?",
+      "If you're using a hands-free device, we can continue. Otherwise, I'd recommend focusing on the road.",
+      "I'm here to help, but let's prioritize safety. Would you like me to send a text instead, using voice commands?"
+    ],
+    "reason": "The presence of driving and traffic noises indicates the user is currently driving. The model adapts its responses to encourage safety and minimize distraction."
+  },
+  {
+    "text": "Remind me to call my mom when I get home.",
+    "background": "driving and traffic",
+    "reply": [
+      "Sure, I'll remind you to call your mom after your drive. Would you like me to remind you once you're parked?",
+      "Of course! Let's set a reminder after you've reached your destination for safety. Does that work for you?",
+      "I can help with that. I'll set up a reminder to call her once you're safely parked at home. How's that?",
+      "Absolutely, safety comes first. I'll remind you to call your mom after your journey. Shall I set that reminder?",
+      "Got it. Let's ensure you're not distracted while driving. I'll remind you once you're no longer driving. Is that okay?"
+    ],
+    "reason": "Given the user is driving, responses encourage setting reminders for after the drive, emphasizing safety and avoiding in-drive distractions."
+  },
+  {
+    "text": "Find me the nearest gas station.",
+    "background": "driving and traffic",
+    "reply": [
+      "I see you're on the road. There's a gas station 3 miles ahead on your right. Would you like directions?",
+      "You're in luck, there's one just up ahead. Shall I navigate you there using the safest route?",
+      "Considering the traffic, the nearest gas station is 5 minutes away. Want me to guide you?",
+      "There's a station close by. I can find you the quickest route there. Should I start the navigation?",
+      "I found a nearby gas station. It's pretty accessible from where you are. Ready for me to set up navigation?"
+    ],
+    "reason": "Because the user is currently driving, the model provides concise, straightforward instructions for finding a gas station, prioritizing convenience and safety."
+  },
+  {
+    "text": "I'm feeling hungry, what are my options?",
+    "background": "driving and traffic",
+    "reply": [
+      "Looking for a quick bite? There's a drive-thru about two miles ahead. Shall I direct you there?",
+      "If you're thinking about grabbing something to eat, there's a place with great reviews just off the next exit. Want the details?",
+      "There's a variety of eateries along your route. I can find something that matches your taste. What do you feel like eating?",
+      "Considering you're driving, I'll look for something you can grab on the go. How about a sandwich shop nearby?",
+      "Hunger strikes at the oddest times, right? Let me find a quick and easy spot for you to grab something. Preferences?"
+    ],
+    "reason": "While driving, the user's request for food options prompts the model to suggest easily accessible locations, prioritizing drive-thru or quick-service options for convenience and safety."
+  },
+  {
+    "text": "Can you play some music?",
+    "background": "driving and traffic",
+    "reply": [
+      "Sure, I can start a playlist that won't distract you from driving. Any genre preference?",
+      "Playing music now. Let's keep the volume to a safe level, so it won't interfere with your driving awareness. Sound good?",
+      "Absolutely, I'll play some tunes. Remember to keep the volume at a level where you can still hear traffic sounds. What type of music do you like?",
+      "Music coming up! Let's choose something that keeps you relaxed but alert while driving. Any favorite artists?",
+      "I'll get that music going for you. To ensure your safety, I'll keep the volume moderate. Ready for some beats?"
+    ],
+    "reason": "When driving, the model suggests playing music at a safe volume to ensure the driver remains alert and aware of their surroundings, emphasizing safety."
+  }
+]
+```

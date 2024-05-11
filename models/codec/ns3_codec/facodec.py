@@ -694,7 +694,6 @@ class FACodecRedecoder(nn.Module):
         speaker_embedding,
         use_residual_code=False,
     ):
-
         x = 0
 
         x_p = 0
@@ -713,7 +712,6 @@ class FACodecRedecoder(nn.Module):
         x = x + x_c
 
         if use_residual_code:
-
             x_r = 0
             for i in range(self.vq_num_q_r):
                 x_r = x_r + self.residual_embs[i](
@@ -732,7 +730,6 @@ class FACodecRedecoder(nn.Module):
         return x
 
     def vq2emb(self, vq, speaker_embedding, use_residual=True):
-
         out = 0
 
         x_t = 0

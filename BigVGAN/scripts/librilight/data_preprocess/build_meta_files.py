@@ -3,7 +3,6 @@ import tqdm
 
 
 if __name__ == "__main__":
-
     large_data_path = "/home/aiscuser/data/librilight/large_segs_15s"
     medium_data_path = "/home/aiscuser/data/librilight/medium_small_duplicate_15s"
 
@@ -14,9 +13,7 @@ if __name__ == "__main__":
 
     for root_path in [large_data_path, medium_data_path]:
         for speaker_id in tqdm.tqdm(os.listdir(root_path)):
-
             for book_id in os.listdir(os.path.join(root_path, speaker_id)):
-
                 for seg_id in os.listdir(os.path.join(root_path, speaker_id, book_id)):
                     audio_path = os.path.join(root_path, speaker_id, book_id, seg_id)
 

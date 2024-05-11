@@ -3,7 +3,6 @@ import random
 
 
 if __name__ == "__main__":
-
     output_valid_meta_file = "LibriLight/valid_meta_file.txt"  # 120 cases
     output_test_meta_file = "LibriLight/test_meta_file.txt"
 
@@ -14,9 +13,7 @@ if __name__ == "__main__":
     audio_paths = []
 
     for speaker_id in os.listdir(test_folder):
-
         for book_id in os.listdir(os.path.join(test_folder, speaker_id)):
-
             for seg_id in os.listdir(os.path.join(test_folder, speaker_id, book_id)):
                 audio_path = os.path.join(test_folder, speaker_id, book_id, seg_id)
 

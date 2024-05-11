@@ -1,0 +1,64 @@
+```json
+[
+  {
+    "text": "How can I calm my dog during a storm?",
+    "background": "raining or thundering",
+    "reply": [
+      "Creating a cozy hideaway where your dog can feel secure might help. Perhaps a blanket fort?",
+      "Playing calming music or white noise can mask the sound of the thunder.",
+      "Try to act as normally as possible; your calm behavior can reassure your dog.",
+      "Consider desensitization training to get your dog used to the sounds of storms gradually.",
+      "There are also special dog anxiety vests that might help your dog feel more secure."
+    ],
+    "reason": "The responses are adapted to offer practical advice that is specifically useful during a thunderstorm, focusing on reducing the dog's anxiety triggered by the storm sounds."
+  },
+  {
+    "text": "What indoor activities are best when it's raining?",
+    "background": "raining or thundering",
+    "reply": [
+      "A movie marathon with your favorite films can be quite cozy when it's pouring outside.",
+      "How about diving into a good book or starting a new crafting project?",
+      "Cooking or baking something new can be both comforting and rewarding.",
+      "Board games or puzzle-solving can be a fun way to pass the time with family or friends.",
+      "Starting an indoor mini-garden might be interesting, herbs or small plants could be a good start."
+    ],
+    "reason": "The suggestions aim to mitigate the gloomy effects of rain by proposing engaging and comforting indoor activities that are particularly enjoyable during bad weather."
+  },
+  {
+    "text": "Do you have any tips for driving in heavy rain?",
+    "background": "raining or thundering",
+    "reply": [
+      "Make sure your headlights are on for visibility, even during the day.",
+      "Reduce your speed to help avoid hydroplaning on wet roads.",
+      "Keep a greater distance than usual between you and the car in front of you.",
+      "Try to drive in the tracks of the vehicle ahead to reduce water contact.",
+      "If the rain is too heavy, it's safer to pull over and wait until it lightens."
+    ],
+    "reason": "The driving tips are tailored to address safety concerns specific to driving in heavy rain and thunderstorms, highlighting actions to increase safety."
+  },
+  {
+    "text": "What are some emergency supplies I should have during a thunderstorm?",
+    "background": "raining or thundering",
+    "reply": [
+      "A battery-powered or hand-crank radio to stay informed even if the power goes out.",
+      "Flashlights and extra batteries in case of power outages.",
+      "A first aid kit with essential medicines and supplies.",
+      "Non-perishable food items and bottled water sufficient for a few days.",
+      "Portable chargers for your mobile devices to keep them powered."
+    ],
+    "reason": "The response is adapted to the context of preparing for emergencies caused by severe weather, suggesting items that are especially useful during power outages or when going outside is not safe."
+  },
+  {
+    "text": "How can I maintain my fitness routine when it's raining non-stop?",
+    "background": "raining or thundering",
+    "reply": [
+      "Consider indoor workouts such as yoga, pilates, or using an exercise app.",
+      "If you have stairs, stair climbing can be a great cardio workout.",
+      "Jumping rope is an effective and space-efficient cardio exercise.",
+      "Look into online fitness classes or virtual challenges to stay motivated.",
+      "Bodyweight exercises like push-ups, squats, and lunges don't require any equipment and can be done anywhere."
+    ],
+    "reason": "The feedback provides alternatives that are specifically suited for indoor conditions, recognizing that the rainy weather limits outdoor physical activities."
+  }
+]
+```

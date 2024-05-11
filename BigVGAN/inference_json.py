@@ -51,7 +51,6 @@ def inference(a, h):
     generator.eval()
     generator.remove_weight_norm()
     with torch.no_grad():
-
         test_json = "/blob/v-zeqianju/dataset/tts/librispeech/test/ref_dur_3_test_merge_1pspk_with_punc_refmeta_normwav_fix_refuid_new_diffprompt.json"
 
         with open(test_json, "r") as f:

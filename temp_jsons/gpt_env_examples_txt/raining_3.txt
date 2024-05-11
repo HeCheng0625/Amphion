@@ -1,0 +1,64 @@
+```json
+[
+  {
+    "text": "Do I need to water the plants today?",
+    "background": "raining or thundering",
+    "reply": [
+      "With the sound of rain outside, there's no need for extra watering today. Nature has got it covered!",
+      "No watering required today! The rain is taking care of your garden as we speak.",
+      "The plants will be happy with the rainwater today, so you can skip the watering.",
+      "Looks like the rain is giving your plants a good drink, so you can take a rest from gardening duties.",
+      "Considering the thunderstorm outside, your plants are getting plenty of water. No additional watering is needed today."
+    ],
+    "reason": "The background sound of raining or thundering suggests that the plants are already receiving natural water, so the model's replies guide the user to not water the plants."
+  },
+  {
+    "text": "How can I stay active despite the bad weather?",
+    "background": "raining or thundering",
+    "reply": [
+      "Indoor exercises like yoga or using a treadmill could be great alternatives when it's raining or thundering outside.",
+      "Why not try some home workouts or dance along to an online fitness class? Staying indoors doesn't mean staying inactive.",
+      "On a rainy or stormy day, indoor activities such as stretching or skipping rope can keep you moving.",
+      "This might be the perfect opportunity to explore some indoor exercises, like online fitness videos or stationary cycling.",
+      "Consider doing some bodyweight exercises or following along with a virtual workout session to stay active indoors."
+    ],
+    "reason": "Given the sounds of rain and thunder, suggesting outdoor activities would be impractical, so the model provides alternatives to maintain physical activity indoors."
+  },
+  {
+    "text": "Should we go for a picnic today?",
+    "background": "raining or thundering",
+    "reply": [
+      "It might be best to postpone the picnic due to the rain and thunder. How about planning an indoor activity instead?",
+      "A picnic might not be enjoyable with the current weather. Perhaps a cozy indoor gathering would be better.",
+      "Given the rainy and stormy conditions, having a picnic indoors today could be a fun and dry alternative.",
+      "It sounds like the weather today wouldn't cooperate for an outdoor picnic. Maybe a movie marathon or board games indoors?",
+      "Why not turn it into an indoor picnic right in your living room? The sound of rain and thunder could add a unique ambiance!"
+    ],
+    "reason": "The presence of rain and thunder suggests unsuitable conditions for an outdoor picnic, so the model suggests alternative indoor activities."
+  },
+  {
+    "text": "Is it a good day for washing the car?",
+    "background": "raining or thundering",
+    "reply": [
+      "Today’s rain will do the work for you, albeit not as thoroughly as a hand wash. Maybe save the detailed cleaning for a sunnier day.",
+      "With the sound of rain and thunder, it might not be ideal for washing your car. Nature's giving it a rinse though!",
+      "The weather seems to suggest a natural car wash happening outside. Might want to wait for a clearer day for a proper wash.",
+      "Considering it's raining, your car is getting somewhat of a wash. A sunny day would be more suitable for detailing, though.",
+      "The rain and thunder today mean you can skip the car wash. A good day for it might be after the weather clears up."
+    ],
+    "reason": "The sound of rain and thunder indicates that outdoor activities like washing the car would not only be unsuitable but also unnecessary, given the natural water exposure."
+  },
+  {
+    "text": "What's a good way to relax on a stormy evening?",
+    "background": "raining or thundering",
+    "reply": [
+      "Listening to the rain and reading a book seems like a wonderful way to unwind during a stormy evening.",
+      "A stormy evening might be perfect for watching classic movies or starting a new series under warm blankets.",
+      "Why not try some soothing music or ambient storm sounds to embrace the coziness of a rainy night?",
+      "A stormy evening is a great opportunity for some self-pampering. Think about a long bath, face masks, and perhaps some meditation.",
+      "Gathering around to share stories or playing board games can make a stormy evening feel special and cozy."
+    ],
+    "reason": "Given the thunder and rain, outdoor relaxation methods are not suitable, inspiring suggestions for cozy, indoor alternatives that complement the stormy ambiance."
+  }
+]
+```

@@ -1,0 +1,62 @@
+[
+    {
+        "text": "How do you get over a bad breakup?",
+        "background": "children's voice",
+        "reply": [
+            "It's important to focus on self-care and spending time on activities that make you happy. How about a fun project or hobby you can do together as a family?",
+            "Surrounding yourself with positivity and the support of family and friends can be really uplifting. Maybe a family movie night could help?",
+            "Taking time for oneself is key, but so is laughter and joy. Have you thought about a game night with the kids?",
+            "Remember, it's okay to feel sad, but finding joy in the little things can make a big difference. Crafting with your family can be both healing and bonding.",
+            "Exercise is a great way to clear your mind and improve your mood. What about a family walk in the park or a dance party at home?"
+        ],
+        "reason": "The presence of children's voices in the background suggests that the discussion should be kept appropriate and positive, emphasizing family-friendly activities that also help in dealing with adult issues like a breakup."
+    },
+    {
+        "text": "Can you explain how to manage financial stress?",
+        "background": "children's voice",
+        "reply": [
+            "Creating a budget can be a fun family activity! It's a great way to teach kids about money and work together toward common goals.",
+            "Sometimes, playing financial literacy games with your children can offer you a fresh perspective and reduce stress.",
+            "Discussing financial goals as a family can help everyone understand and support each other. Maybe it's time for a family finance meeting?",
+            "Taking small steps together can make a big difference. How about starting a family savings jar for something special everyone can enjoy?",
+            "Remember, it's okay to seek help. There are family-friendly financial planning services that can make managing finances a less stressful experience."
+        ],
+        "reason": "Given the sensitive nature of discussing financial stress in front of children, the response focuses on positive, inclusive strategies that involve family in the solution, making it a learning opportunity for the children as well."
+    },
+    {
+        "text": "I'm feeling really stressed at work. Any advice?",
+        "background": "children's voice",
+        "reply": [
+            "Taking a break with a quick family activity can be a great stress reliever. How about a mini dance party?",
+            "Sharing what you're going through with loved ones can help. Why not plan a simple family activity to relax and open up?",
+            "Engaging in family activities that require teamwork, like building a puzzle, can help take your mind off work stress.",
+            "Physical activity is great for reducing stress. A family walk or a bike ride might be just what you need.",
+            "Remember, it's okay to take time for yourself, too. Perhaps when the children are in bed, you can have some quiet time or a relaxing bath."
+        ],
+        "reason": "The advice shifts towards family-oriented stress relief methods to ensure the presence of children enhances the coping strategy rather than limiting the conversation."
+    },
+    {
+        "text": "How can I improve my relationship with my partner?",
+        "background": "children's voice",
+        "reply": [
+            "Communication is key. How about setting aside time for a family game night that encourages open conversation?",
+            "Quality time together is important. Planning a family outing where you can also have moments to yourselves can be beneficial.",
+            "Sometimes, working on a project or goal together as a family can strengthen bonds and improve relationships.",
+            "Expressing gratitude towards each other in family settings can set a positive example and improve your relationship.",
+            "Remember, it's also important to find time for just the two of you, maybe after the kids are asleep, to reconnect."
+        ],
+        "reason": "In the context of children's voices in the background, the focus is on improving the adult relationship through family-oriented activities and moments, fostering a positive environment for both the relationship and the children."
+    },
+    {
+        "text": "Why is it hard to keep up with friends after having kids?",
+        "background": "children's voice",
+        "reply": [
+            "Life gets busier, but it's important to involve your kids in social activities. Maybe organize a playdate that includes your friends.",
+            "Finding common ground with friends who have children can make socializing easier. Think about joint family outings.",
+            "The key is balance. Setting up specific times to catch up with friends, perhaps during children\u2019s activities, can help.",
+            "Use technology to your advantage. A group video call can be a fun way for both you and the kids to stay in touch with friends.",
+            "Remember, true friends understand. They can become part of your extended family, joining in on family activities."
+        ],
+        "reason": "Given the context of children's voices, the suggestions are tailored to integrate family life with maintaining friendships, highlighting ways to socialize that accommodate the presence of children."
+    }
+]

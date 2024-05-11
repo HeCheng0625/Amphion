@@ -17,7 +17,6 @@ patterns = [
 
 
 def cje_cleaners(text):
-
     matches = []
     for pattern in patterns:
         matches.extend(re.finditer(pattern, text))

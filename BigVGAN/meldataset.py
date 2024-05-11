@@ -199,7 +199,6 @@ class MelDataset(torch.utils.data.Dataset):
         #     assert os.path.exists(self.audio_files[i]), "{} not found".format(self.audio_files[i])
 
     def __getitem__(self, index):
-
         filename = self.audio_files[index]
         if self._cache_ref_count == 0:
             audio, sampling_rate = load_wav(filename, self.sampling_rate)

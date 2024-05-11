@@ -123,7 +123,6 @@ class GPTTTS(nn.Module):
         return_labels=False,
     ):
         if prompt_ids is None:
-
             phone_ids, phone_mask, phone_label = self.add_phone_eos_bos_label(
                 phone_ids,
                 phone_mask,
