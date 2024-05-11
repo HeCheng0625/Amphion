@@ -36,6 +36,7 @@ class EmiliaDataset(Dataset):
                 bucket_name=bucket_name, 
                 resample_to_16k=False, 
                 from_database=True):
+
         # Initialize OSS client
         self.init_client(access_key_id, access_key_secret, bucket_name) # 建立连接
         self.text_tokenizer = PhonemeBpeTokenizer()
@@ -57,7 +58,8 @@ class EmiliaDataset(Dataset):
             logger.info("No cache exists")
             if from_database:
                 # Load path from database
-                self.get_all_paths_from_database(language="zh", duration_limit=0.2, filtered=False) # 200 hours
+                self.get_all_paths_from_database(language="zh", duration_limit=60000, filtered=False) # hours
+                self.get_all_paths_from_database(language="en", duration_limit=17000, filtered=False) # hours
                 # If need other language, change language and call it again
             else:
                 # Load path from oss one by one
