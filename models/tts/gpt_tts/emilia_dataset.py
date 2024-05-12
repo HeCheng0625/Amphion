@@ -48,6 +48,7 @@ class EmiliaDataset(Dataset):
         self.wav_paths = []
         self.json_path2meta = {}
         self.path_is_filtered = False
+        self.detabase_connection = None
         # Load paths from cache files if available, otherwise get them from OSS
         wav_paths_cache = "wav_paths_cache.pkl"
         filtered_wav_paths_cache = "filtered_wav_paths_cache.pkl"
@@ -61,10 +62,14 @@ class EmiliaDataset(Dataset):
         else:
             logger.info("No cache exists")
             if from_database:
-                # Load path from database
-                self.get_all_paths_from_database(language="zh", duration_limit=60000, filtered=False) # hours
-                self.get_all_paths_from_database(language="en", duration_limit=17000, filtered=False) # hours
-                # If need other language, change language and call it again
+                self.detabase_connection = self.init_database()
+                if self.detabase_connection:
+                    self.detabase_connection.start_transaction()
+                    # Load path from database
+                    self.get_all_paths_from_database(language="en", duration_limit=12000, filtered=False) # hours
+                    self.get_all_paths_from_database(language="zh", duration_limit=12000, filtered=False) # hours
+                    # If need other language, change language and call it again
+                    self.detabase_connection.close()
             else:
                 # Load path from oss one by one
                 self.get_all_paths_form_oss(folder_path="qianyi/raw/xima_processed/", num_limit=100000) 
@@ -116,9 +121,20 @@ class EmiliaDataset(Dataset):
             pickle.dump(self.json_paths, f)
         logger.info("Saved paths to cache files")
 
+    def init_database(self):
+        try:
+            from AudioDataCollection.database.db_manager import DatabaseManager
+            db_manager = DatabaseManager()
+            conn: MySQLConnection = db_manager.get_connection()
+            return conn
+        except Exception as e:
+            # raise e
+            logger.info("Gat database error {}".format(e))
+            return None
+        
     def get_path_from_database(self, path, num_wav, idx=None):
         json_path = path.split(bucket_name)[1][1:]
-        logger.info("Get json from {}".format(path))
+        # logger.info("Get json from {}".format(path))
         self.json_paths.append(json_path)
         audio_name = json_path.split(".json")[0]
         is_mp3 = True if 'mp3' in json_path else False
@@ -127,10 +143,10 @@ class EmiliaDataset(Dataset):
                 wav_path = audio_name + "_" + str(i) + ".wav"
                 mp3_path = audio_name + "_" + str(i) + ".mp3"
                 try:
-                    if is_mp3 or self.bucket.object_exists(mp3_path):
-                        self.wav_paths.append(mp3_path)
-                    else:
+                    if not is_mp3: # or self.bucket.object_exists(wav_path):
                         self.wav_paths.append(wav_path)
+                    else:
+                        self.wav_paths.append(mp3_path)
                 except oss2.exceptions.NoSuchKey:
                     continue
                 except oss2.exceptions.OssError as e:
@@ -149,23 +165,18 @@ class EmiliaDataset(Dataset):
                     continue
 
     def get_all_paths_from_database(self, language, duration_limit, filtered=False):
-        logger.info("Start to get all paths")
-        from AudioDataCollection.database.db_manager import DatabaseManager
-        db_manager = DatabaseManager()
+        logger.info("Start to get all {} paths".format(language))
         try:
-            conn: MySQLConnection = db_manager.get_connection()
-            # 开启事务
-            conn.start_transaction()
-            cursor = conn.cursor()
+            cursor = self.detabase_connection.cursor()
 
-            logger.info("Connect database successfully")
             tmp_duration = 0
             page = 0
-            num_per_page = 2
+            num_per_page = 100
             duration_limit = duration_limit * 3600
  
             logger.info("Get paths from database")
-            while tmp_duration < duration_limit:
+            is_enough = False
+            while not is_enough:
 
                 if not filtered:
                     cursor.execute(
@@ -179,13 +190,17 @@ class EmiliaDataset(Dataset):
 
                     record = cursor.fetchall()
                     if record is None:
-                        conn.rollback()
+                        self.detabase_connection.rollback()
                         continue
                     
                     for single_record in record:
                         path, duration, num_wav = single_record
                         self.get_path_from_database(path, num_wav)
-                        tmp_duration += duration
+                        if tmp_duration < duration_limit:
+                            tmp_duration += duration
+                        else:
+                            is_enough = True
+                            break
                 else:
                     cursor.execute(
                         f"""
@@ -198,13 +213,14 @@ class EmiliaDataset(Dataset):
 
                     record = cursor.fetchall()
                     if record is None:
-                        conn.rollback()
+                        self.detabase_connection.rollback()
                         continue
 
                     for single_record in record:
                         path, duration, num_wav, idx = single_record
                         self.get_path_from_database(path, num_wav, idx)
                         tmp_duration += duration
+                logger.info("Get %.2f hours" % (tmp_duration / 3600))
                 page += 1
                 
             logger.info("All paths got successfully")
@@ -215,12 +231,9 @@ class EmiliaDataset(Dataset):
             )
         except Exception as e:
             # 发生错误时回滚事务
-            conn.rollback()
+            self.detabase_connection.rollback()
             # raise e
             logger.info("Gat path error {}".format(e))
-        finally:
-            if conn:
-                conn.close()
 
     def get_all_paths_form_oss(self, folder_path, num_limit):
         logger.info("Start to get all paths")
