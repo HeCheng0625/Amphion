@@ -12,6 +12,7 @@ import os
 import time
 from torch.utils.data import Dataset
 from utils.g2p import PhonemeBpeTokenizer
+from multiprocessing import Pool
 logging.basicConfig(level=logging.INFO)  # Configure logging level to INFO
 logger = logging.getLogger(__name__)
 
@@ -66,8 +67,8 @@ class EmiliaDataset(Dataset):
                 if self.detabase_connection:
                     self.detabase_connection.start_transaction()
                     # Load path from database
-                    self.get_all_paths_from_database(language="en", duration_limit=12000, filtered=False) # hours
                     self.get_all_paths_from_database(language="zh", duration_limit=12000, filtered=False) # hours
+                    self.get_all_paths_from_database(language="en", duration_limit=12000, filtered=False) # hours
                     # If need other language, change language and call it again
                     self.detabase_connection.close()
             else:
@@ -84,7 +85,7 @@ class EmiliaDataset(Dataset):
         if os.path.exists(json_path2meta):
             self.load_path2meta(json_path2meta)
         else:
-            self.get_jsoncache()
+            self.get_jsoncache_multiprocess()
         
         if not self.path_is_filtered:
             self.filter_by_meta()
@@ -259,17 +260,15 @@ class EmiliaDataset(Dataset):
             % (len(self.wav_paths), len(self.json_paths))
         )
 
-    def get_bounds(self, meta):
+    def get_bounds(self, meta, json_path):
         avg_durations = []
         for m in meta:
-            phone_count = 0
-            if 'phone_id' in m:
-                phone_count = len(m['phone_id'].split())
-            else:
+            phone_id = [-1] # error value
+            if m['language'] in ['zh', 'en']:
                 phone_id = self.g2p(m['text'], m['language'])[1]
-                m['phone_id'] = " ".join(map(str, phone_id))
-                phone_count = len(phone_id)
-                m['phone_count'] = phone_count
+            m['phone_id'] = " ".join(map(str, phone_id))
+            phone_count = len(phone_id)
+            m['phone_count'] = phone_count
             duration = m['end'] - m['start']
             m['duration'] = duration
             try:
@@ -286,6 +285,51 @@ class EmiliaDataset(Dataset):
             m['lower_bound'] = lower_bound
             m['upper_bound'] = upper_bound
         return meta
+
+    def process_json_cache(self, json_path):
+        try:
+            file_bytes = self.bucket.get_object(json_path)
+            buffer = io.BytesIO(file_bytes.read())
+            json_cache = json.load(buffer)
+            del buffer, file_bytes
+            if json_cache is None:
+                logger.info("json is none")
+            elif isinstance(json_cache, (dict, list)) and not json_cache:
+                logger.info("json is none")
+            else:
+                print(json_path)
+                json_cache = self.get_bounds(json_cache, json_path)
+                self.json_path2meta[json_path] = json_cache
+                self.process_num += 1
+                print("Process num: {}, total num: {}".format(self.process_num, len(self.json_paths)))
+        except oss2.exceptions.NoSuchKey as e:
+            logger.info(
+                "Not found: http_status={1}, request_id={2}".format(
+                    e.status, e.request_id
+                )
+            )
+            self.error_path.append(json_path) 
+        except Exception as e:
+            logger.info("Error json: {}".format(json_path))
+            self.error_path.append(json_path) 
+
+    def get_jsoncache_multiprocess(self):
+        logger.info("Start to get json cache, build pool")
+        pool = Pool(processes=48, maxtasksperchild=500)  # 创建进程池
+        self.error_path = []
+        self.process_num = 0
+        args = [(self.json_paths[i]) for i in range(len(self.json_paths))]  # 构造参数列表
+        logger.info("Start to get json cache")
+        seqs_tmp = pool.map(self.process_json_cache, args)  # 多线程调用process_audio_wrapper
+        pool.close()  # 关闭进程池
+        pool.join()  # 等待所有进程完成
+        logger.info("Remove error path")
+        for error in self.error_path:
+            self.json_paths.remove(error)
+        # write to cache file
+        with open("json_path2meta.pkl", "wb") as f:
+            pickle.dump(self.json_path2meta, f)
+        logger.info("Json cache write to json_path2meta.pkl successfully")
 
     def get_jsoncache(self):
         logger.info("Start to get json cache")
@@ -351,14 +395,16 @@ class EmiliaDataset(Dataset):
                 meta = self.get_meta_from_wav_path(wav_path) #这里的meta是个字典
             except:
                 continue
-            duration = meta["end"] - meta["start"]
+            duration = meta['duration']
             all_duration += duration
-            phone_count = len(meta['phone_id'].split())
+            phone_count = meta['phone_count']
+            if meta['phone_id'] == '-1':
+                continue
             # filter by dns mos
             if 'remove' in meta:
                 if meta['remove'] == 'true':
                     continue
-            if meta["mos"]["dnsmos"] < 3:
+            if meta['mos']['dnsmos'] < 3:
                 continue
             if duration < 3 or duration > 30:
                 continue
@@ -433,7 +479,7 @@ class EmiliaDataset(Dataset):
         del buffer, pad_shape, shape
         speech_tensor = torch.tensor(speech, dtype=torch.float32)
         meta = self.get_meta_from_wav_path(wav_path) # 获取对应的meta信息
-        phone_id = self.g2p(meta['text'], meta['language'])[1]
+        phone_id = meta['phone_id'].split()
         phone_id = torch.tensor([int(i) for i in phone_id], dtype=torch.long)
         phone_id = torch.cat([torch.tensor(LANG2CODE[meta['language']], dtype=torch.long).reshape(1), phone_id]) # add language token
         return dict(
