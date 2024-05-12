@@ -6,7 +6,7 @@
             "Listening to the soothing sounds of the waves can be very calming. Why not take a moment to enjoy the sea breeze?",
             "A walk along the beach can do wonders for stress relief. The natural scenery and fresh air might be just what you need.",
             "Engaging in a mindfulness exercise by the sea can be exceptionally peaceful. Focusing on the sound of the waves can help center your thoughts.",
-            "If you\u2019re at the beach, simply sitting and watching the sunset can be a tranquil experience. The natural beauty is often very soothing.",
+            "If you're at the beach, simply sitting and watching the sunset can be a tranquil experience. The natural beauty is often very soothing.",
             "Collecting shells or smooth stones as you walk along the shoreline can be a meditative activity, helping your mind to unwind."
         ],
         "reason": "The presence of the sea beach sound suggests a serene environment, which is conducive to relaxing activities, especially ones that involve nature and mindfulness."
@@ -24,7 +24,7 @@
         "reason": "Given the beach setting, recommended activities focus on both relaxation and physical engagement that are specific to the coastal environment, leveraging the unique aspects of the seaside."
     },
     {
-        "text": "I\u2019m feeling a bit under the weather today. What should I do?",
+        "text": "I'm feeling a bit under the weather today. What should I do?",
         "background": "sea beach",
         "reply": [
             "Resting on the beach, especially under a shade, can help you recuperate with the fresh sea air.",
@@ -55,7 +55,7 @@
             "Make sure to apply waterproof sunscreen regularly to protect against sunburn.",
             "Stay hydrated by drinking plenty of water throughout the day to avoid heatstroke.",
             "Be aware of your surroundings, especially the water currents, to avoid getting caught in a rip current.",
-            "Wear protective footwear if you\u2019re exploring rocky areas or places where there might be sharp shells."
+            "Wear protective footwear if you're exploring rocky areas or places where there might be sharp shells."
         ],
         "reason": "Safety tips are tailored to the specific risks and environmental factors associated with the beach, emphasizing sun protection, hydration, and awareness of natural hazards."
     }

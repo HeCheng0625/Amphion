@@ -24,7 +24,7 @@
         "reason": "Given the tranquil beach setting, the reply focuses on genres that match or complement the atmosphere, providing a thematic or relaxing reading experience."
     },
     {
-        "text": "What\u2019s a fun beach game for adults?",
+        "text": "What's a fun beach game for adults?",
         "background": "sea beach",
         "reply": [
             "Beach volleyball is always a hit. The sound of the waves in the background makes for an exhilarating game environment.",
@@ -36,7 +36,7 @@
         "reason": "The choices for beach games take into account the spacious and scenic beach environment, leveraging the energetic sounds of the sea to enhance the experience."
     },
     {
-        "text": "Do I need sunscreen if it\u2019s cloudy?",
+        "text": "Do I need sunscreen if it's cloudy?",
         "background": "sea beach",
         "reply": [
             "Absolutely, UV rays can penetrate through clouds, and the sound of the waves indicates you're out in the open, making sunscreen necessary.",

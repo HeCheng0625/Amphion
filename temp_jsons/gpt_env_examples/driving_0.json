@@ -40,9 +40,9 @@
         "background": "driving and traffic",
         "reply": [
             "The museum lot tends to fill up quickly. There's a nearby public garage that usually has space. Want directions?",
-            "Street parking around the museum is limited, especially with the current traffic. There\u2019s a lot a block away. Should I guide you?",
+            "Street parking around the museum is limited, especially with the current traffic. There's a lot a block away. Should I guide you?",
             "Given the traffic situation, consider parking at the city lot and walking over. It's only a 5-minute walk. Is that OK?",
-            "There's a little-known parking area just past the museum that might have space. It\u2019s a bit of a walk. Shall I direct you there?",
+            "There's a little-known parking area just past the museum that might have space. It's a bit of a walk. Shall I direct you there?",
             "The museum's parking is likely crowded at this hour. There's an alternative lot with a shuttle service. Interested?"
         ],
         "reason": "Adjusting for the auditory context of driving and traffic, responses aim to offer practical parking solutions near the museum. They consider the likelihood of congestion and suggest alternatives that balance proximity and the potential for available space."

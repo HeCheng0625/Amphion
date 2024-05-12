@@ -6,7 +6,7 @@
             "Looking for a caffeine fix? There's a drive-thru caf\u00e9 just two miles ahead on your route.",
             "Considering the traffic, I'd suggest a place that's quick and easy to access. How about the coffee shop near the next intersection?",
             "To avoid delays, I recommend a coffee spot that's a short drive from here. There's one with great reviews and a drive-thru option.",
-            "I found a coffee shop that\u2019s not only close but also on the right side of the road, making it easier to pull in and out. Shall I direct you there?",
+            "I found a coffee shop that's not only close but also on the right side of the road, making it easier to pull in and out. Shall I direct you there?",
             "There is a little coffee kiosk right off the highway. It should be quick to stop by without getting stuck in traffic. Interested?"
         ],
         "reason": "Given that you are driving, I suggested options that minimize disruptions to your trip, focusing on convenience and quick access, including drive-thrus and locations right off the highway."
@@ -41,19 +41,19 @@
         "reply": [
             "The closest gas station is just a mile ahead on your current route. I can guide you there if you'd like.",
             "Considering the traffic, there's a station on your right in about 1.5 miles, which should be easy to access.",
-            "To avoid the heavy traffic, there\u2019s an alternative route that takes you to a gas station within 3 miles. Shall we try that way?",
-            "There's a gas station conveniently located off the next exit. It\u2019s highly rated for quick service, so you won\u2019t be delayed.",
+            "To avoid the heavy traffic, there's an alternative route that takes you to a gas station within 3 miles. Shall we try that way?",
+            "There's a gas station conveniently located off the next exit. It's highly rated for quick service, so you won't be delayed.",
             "Looking at the current traffic conditions, the gas station I recommend is 2 miles away but on a less congested road. Would you prefer that one?"
         ],
         "reason": "The suggestions take into account the need to balance between proximity and traffic conditions, offering options that are accessible and cause minimal disruption to ongoing travel."
     },
     {
-        "text": "Suggest a place to eat that\u2019s kid-friendly on our route.",
+        "text": "Suggest a place to eat that's kid-friendly on our route.",
         "background": "driving and traffic",
         "reply": [
             "There's a family-friendly diner with a play area that's just off the next exit. It would be a great spot for a break.",
-            "About 4 miles down the road, there\u2019s a pizza place known for its kid-friendly atmosphere and quick service. Perfect for a short stop.",
-            "For a healthy and quick option, there\u2019s a cafe with a children\u2019s menu and outdoor seating available in the next town over.",
+            "About 4 miles down the road, there's a pizza place known for its kid-friendly atmosphere and quick service. Perfect for a short stop.",
+            "For a healthy and quick option, there's a cafe with a children's menu and outdoor seating available in the next town over.",
             "I located a roadside family eatery that not only has a kids' menu but also crayons and coloring books to keep the little ones busy.",
             "If you're looking for a place where everyone can stretch their legs and eat, there's a park with picnic tables and a food truck nearby. How about that?"
         ],

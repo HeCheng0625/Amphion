@@ -3,8 +3,8 @@ import json
 import librosa
 from tqdm import tqdm
 
-base_path = "/blob/v-yuancwang/LibriTTS/"
-wav_dir_path = "dev-clean"
+base_path = "/home/t-zeqianju/yuancwang/temp_test_dataset/libritts-train-clean-100"
+wav_dir_path = "train-clean-100"
 
 prompt_json = []
 

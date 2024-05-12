@@ -19,7 +19,7 @@
             "There are grocery stores that offer curbside pickup for healthy ready-to-eat meals. Would you like to locate one?",
             "Many apps now offer delivery from local restaurants that serve healthy options. I can find something for you.",
             "A smoothie could be a quick, nutritious option you can enjoy even while driving.",
-            "Would you be interested in stopping by a local farmer\u2019s market? You can find fresh ingredients for a quick salad."
+            "Would you be interested in stopping by a local farmer's market? You can find fresh ingredients for a quick salad."
         ],
         "reason": "Given the background of driving or traffic, the response focuses on options that are quick, convenient, and possible to access while on the move, ensuring safety and practicality."
     },

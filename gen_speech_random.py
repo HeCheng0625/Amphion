@@ -80,10 +80,24 @@ def get_random_prompt(speech_data):
     random_index = np.random.randint(0, len(speech_data))
     text = speech_data[random_index]["text"]
     wav_path = speech_data[random_index]["path"]
-    base_dir_path = "/blob/v-yuancwang/LibriTTS"
+    base_dir_path = "/home/t-zeqianju/yuancwang/temp_test_dataset/libritts-train-clean-100"
     wav, sr = librosa.load(os.path.join(base_dir_path, wav_path), sr=16000)
     return wav, text
 
+
+def prepare_uid_text():
+    json_dir = "/home/t-zeqianju/yuancwang/Amphion/temp_jsons/gpt_env_examples"
+    uid2text = {}
+    uid = 0
+    for file in os.listdir(json_dir):
+        if file.endswith(".json"):
+            with open(os.path.join(json_dir, file), "r") as f:
+                data = json.load(f)
+                for example in data:
+                    text = example["text"]
+                    uid2text[uid] = text
+                    uid += 1
+    return uid2text
 
 def gen_speech(
     prompt_wav,
@@ -147,22 +161,27 @@ if __name__ == "__main__":
     g2p = G2p()
 
     speech_data = prepare_prompt_json()
-    target_text = "What is the UV index like today?"
-
-    for i in range(10):
-        wav, text = get_random_prompt(speech_data)
-        gen_wav, _ = gen_speech(
-            wav,
-            text,
-            target_text,
-            g2p,
-            wav_codec_enc,
-            wav_codec_dec,
-            latent_codec_enc,
-            latent_codec_dec,
-            gpt_tts,
-        )
-        target_path = (
-            "/home/t-zeqianju/yuancwang/Amphion/temp_wavs/recon/{}.wav".format(str(i))
-        )
-        sf.write(target_path, gen_wav, 16000)
+    
+    uid2text = prepare_uid_text()
+    # save uid2text
+    with open("temp_meta_info/uid2text.json", "w") as f:
+        json.dump(uid2text, f, indent=4)
+    
+    for uid, target_text in uid2text.items():
+        for i in range(5):
+            wav, text = get_random_prompt(speech_data)
+            gen_wav, _ = gen_speech(
+                wav,
+                text,
+                target_text,
+                g2p,
+                wav_codec_enc,
+                wav_codec_dec,
+                latent_codec_enc,
+                latent_codec_dec,
+                gpt_tts,
+            )
+            target_path = (
+                "/home/t-zeqianju/yuancwang/temp_speech_env/{}_{}.wav".format(str(uid), str(i))
+            )
+            sf.write(target_path, gen_wav, 16000)
