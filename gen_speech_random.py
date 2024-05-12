@@ -170,6 +170,7 @@ if __name__ == "__main__":
     for uid, target_text in uid2text.items():
         for i in range(5):
             wav, text = get_random_prompt(speech_data)
+            print(text)
             gen_wav, _ = gen_speech(
                 wav,
                 text,

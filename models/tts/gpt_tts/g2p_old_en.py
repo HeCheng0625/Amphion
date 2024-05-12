@@ -259,6 +259,8 @@ def preprocess_text(text):
         if unicodedata.category(char) != "Mn"
     )  # Strip accents
     text = text.lower()
+    # 去除:;
+    text = re.sub("[;:]", ",", text)
     text = re.sub("['\"()]+", "", text)
     text = re.sub("[-]+", " ", text)
     text = re.sub(f"[^ a-z{PUNCS}]", "", text)
