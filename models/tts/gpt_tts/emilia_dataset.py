@@ -49,7 +49,7 @@ class EmiliaDataset(Dataset):
         self.wav_paths = []
         self.json_path2meta = {}
         self.path_is_filtered = False
-        self.detabase_connection = None
+        self.language_list = {'zh': 0.01, 'en': 0.01}
         # Load paths from cache files if available, otherwise get them from OSS
         wav_paths_cache = "wav_paths_cache.pkl"
         filtered_wav_paths_cache = "filtered_wav_paths_cache.pkl"
@@ -63,14 +63,10 @@ class EmiliaDataset(Dataset):
         else:
             logger.info("No cache exists")
             if from_database:
-                self.detabase_connection = self.init_database()
-                if self.detabase_connection:
-                    self.detabase_connection.start_transaction()
-                    # Load path from database
-                    self.get_all_paths_from_database(language="zh", duration_limit=12000, filtered=False) # hours
-                    self.get_all_paths_from_database(language="en", duration_limit=12000, filtered=False) # hours
-                    # If need other language, change language and call it again
-                    self.detabase_connection.close()
+                # Load path from database
+                self.get_all_paths_from_database(language="zh", duration_limit=self.language_list['zh'], filtered=False) # hours
+                self.get_all_paths_from_database(language="en", duration_limit=self.language_list['en'], filtered=False) # hours
+                # If need other language, change language and call it again
             else:
                 # Load path from oss one by one
                 self.get_all_paths_form_oss(folder_path="qianyi/raw/xima_processed/", num_limit=100000) 
@@ -81,11 +77,10 @@ class EmiliaDataset(Dataset):
         self.wav_path_index2phonelen = []
         self.index2num_frames = []
 
-        self.cache_limit = 10000 # josn2meta cache
         if os.path.exists(json_path2meta):
             self.load_path2meta(json_path2meta)
         else:
-            self.get_jsoncache_multiprocess()
+            self.get_jsoncache_multiprocess(pool_size=48)
         
         if not self.path_is_filtered:
             self.filter_by_meta()
@@ -135,7 +130,6 @@ class EmiliaDataset(Dataset):
         
     def get_path_from_database(self, path, num_wav, idx=None):
         json_path = path.split(bucket_name)[1][1:]
-        # logger.info("Get json from {}".format(path))
         self.json_paths.append(json_path)
         audio_name = json_path.split(".json")[0]
         is_mp3 = True if 'mp3' in json_path else False
@@ -167,8 +161,10 @@ class EmiliaDataset(Dataset):
 
     def get_all_paths_from_database(self, language, duration_limit, filtered=False):
         logger.info("Start to get all {} paths".format(language))
+        detabase_connection = self.init_database()
+        detabase_connection.start_transaction()
         try:
-            cursor = self.detabase_connection.cursor()
+            cursor = detabase_connection.cursor()
 
             tmp_duration = 0
             page = 0
@@ -191,7 +187,7 @@ class EmiliaDataset(Dataset):
 
                     record = cursor.fetchall()
                     if record is None:
-                        self.detabase_connection.rollback()
+                        detabase_connection.rollback()
                         continue
                     
                     for single_record in record:
@@ -214,13 +210,17 @@ class EmiliaDataset(Dataset):
 
                     record = cursor.fetchall()
                     if record is None:
-                        self.detabase_connection.rollback()
+                        detabase_connection.rollback()
                         continue
 
                     for single_record in record:
                         path, duration, num_wav, idx = single_record
                         self.get_path_from_database(path, num_wav, idx)
-                        tmp_duration += duration
+                        if tmp_duration < duration_limit:
+                            tmp_duration += duration
+                        else:
+                            is_enough = True
+                            break
                 logger.info("Get %.2f hours" % (tmp_duration / 3600))
                 page += 1
                 
@@ -232,9 +232,10 @@ class EmiliaDataset(Dataset):
             )
         except Exception as e:
             # 发生错误时回滚事务
-            self.detabase_connection.rollback()
+            detabase_connection.rollback()
             # raise e
             logger.info("Gat path error {}".format(e))
+        detabase_connection.close()
 
     def get_all_paths_form_oss(self, folder_path, num_limit):
         logger.info("Start to get all paths")
@@ -260,11 +261,11 @@ class EmiliaDataset(Dataset):
             % (len(self.wav_paths), len(self.json_paths))
         )
 
-    def get_bounds(self, meta, json_path):
+    def get_bounds(self, meta):
         avg_durations = []
         for m in meta:
             phone_id = [-1] # error value
-            if m['language'] in ['zh', 'en']:
+            if m['language'] in list(self.language_list.keys()):
                 phone_id = self.g2p(m['text'], m['language'])[1]
             m['phone_id'] = " ".join(map(str, phone_id))
             phone_count = len(phone_id)
@@ -287,6 +288,7 @@ class EmiliaDataset(Dataset):
         return meta
 
     def process_json_cache(self, json_path):
+        json_meta = [{'text': '-1', 'phone_id': '-1'}]
         try:
             file_bytes = self.bucket.get_object(json_path)
             buffer = io.BytesIO(file_bytes.read())
@@ -297,73 +299,39 @@ class EmiliaDataset(Dataset):
             elif isinstance(json_cache, (dict, list)) and not json_cache:
                 logger.info("json is none")
             else:
-                print(json_path)
-                json_cache = self.get_bounds(json_cache, json_path)
-                self.json_path2meta[json_path] = json_cache
+                json_meta = self.get_bounds(json_cache)
                 self.process_num += 1
                 print("Process num: {}, total num: {}".format(self.process_num, len(self.json_paths)))
         except oss2.exceptions.NoSuchKey as e:
             logger.info(
-                "Not found: http_status={1}, request_id={2}".format(
-                    e.status, e.request_id
-                )
-            )
-            self.error_path.append(json_path) 
+                "Not found: http_status={0}, request_id={1}".format(e.status, e.request_id))
         except Exception as e:
             logger.info("Error json: {}".format(json_path))
-            self.error_path.append(json_path) 
+        del json_cache
+        return json_meta
 
-    def get_jsoncache_multiprocess(self):
-        logger.info("Start to get json cache, build pool")
-        pool = Pool(processes=48, maxtasksperchild=500)  # 创建进程池
-        self.error_path = []
+    def get_jsoncache_multiprocess(self, pool_size):
+        logger.info("Start to build json pool")
+        pool = Pool(pool_size)  # 创建进程池
         self.process_num = 0
-        args = [(self.json_paths[i]) for i in range(len(self.json_paths))]  # 构造参数列表
         logger.info("Start to get json cache")
-        seqs_tmp = pool.map(self.process_json_cache, args)  # 多线程调用process_audio_wrapper
+        json2meta = pool.map(self.process_json_cache, self.json_paths)  # 多线程调用process_audio_wrapper
         pool.close()  # 关闭进程池
         pool.join()  # 等待所有进程完成
+        error_path_list = []
+        for i in range(len(json2meta)):
+            if json2meta[i][0]['text'] == '-1' and json2meta[i][0]['phone_id'] == '-1':
+                error_path_list.append(self.json_paths[i])
+            else:
+                self.json_path2meta[self.json_paths[i]] = json2meta[i]
         logger.info("Remove error path")
-        for error in self.error_path:
+        for error in error_path_list:
             self.json_paths.remove(error)
         # write to cache file
         with open("json_path2meta.pkl", "wb") as f:
             pickle.dump(self.json_path2meta, f)
         logger.info("Json cache write to json_path2meta.pkl successfully")
-
-    def get_jsoncache(self):
-        logger.info("Start to get json cache")
-        error_path = []  # 用于存储需要删除的元素
-        for json_path in tqdm.tqdm(self.json_paths):
-            try:
-                file_bytes = self.bucket.get_object(json_path)
-                buffer = io.BytesIO(file_bytes.read())
-                json_cache = json.load(buffer)
-                del buffer, file_bytes
-                if json_cache is None:
-                    logger.info("json is none")
-                    continue
-                elif isinstance(json_cache, (dict, list)) and not json_cache:
-                    logger.info("json is none")
-                    continue
-                else:
-                    json_cache = self.get_bounds(json_cache)
-                    self.json_path2meta[json_path] = json_cache
-            except oss2.exceptions.NoSuchKey as e:
-                logger.info(
-                    "Not found: http_status={1}, request_id={2}".format(
-                        e.status, e.request_id
-                    )
-                )
-                error_path.append(json_path)
-                continue
-        logger.info("Remove error path")
-        for error in error_path:
-            self.json_paths.remove(error)
-        # write to cache file
-        with open("json_path2meta.pkl", "wb") as f:
-            pickle.dump(self.json_path2meta, f)
-        logger.info("Json cache write to json_path2meta.pkl successfully")
+        del json2meta, error_path_list
 
     def get_meta_from_wav_path(self, wav_path):
         index = int(wav_path.split("_")[-1].split(".")[0])  # 0
@@ -372,9 +340,11 @@ class EmiliaDataset(Dataset):
         json_name = audio_name + ".json"  # xmly00000_10028458_47798215.json
         json_path = dir_name + "/" + json_name
         meta = self.json_path2meta[json_path][index]
+        del index, audio_name, dir_name, json_name, json_path
         return meta 
 
     def load_path2meta(self, path2meta):
+        logger.info("Loaded meta from cache files")
         self.json_path2meta = pickle.load(open(path2meta, "rb"))
         for path in self.wav_paths:
             duration = self.get_meta_from_wav_path(path)['duration']
@@ -435,9 +405,7 @@ class EmiliaDataset(Dataset):
     def g2p(self, text, language):
         
         text = text.replace("\n", "").strip(" ")
-
         lang_token = lang2token[language]
-
         text = lang_token + text + lang_token
 
         return self.text_tokenizer.tokenize(text=f"{text}".strip(), language=language)
