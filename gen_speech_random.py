@@ -80,7 +80,9 @@ def get_random_prompt(speech_data):
     random_index = np.random.randint(0, len(speech_data))
     text = speech_data[random_index]["text"]
     wav_path = speech_data[random_index]["path"]
-    base_dir_path = "/home/t-zeqianju/yuancwang/temp_test_dataset/libritts-train-clean-100"
+    base_dir_path = (
+        "/home/t-zeqianju/yuancwang/temp_test_dataset/libritts-train-clean-100"
+    )
     wav, sr = librosa.load(os.path.join(base_dir_path, wav_path), sr=16000)
     return wav, text
 
@@ -98,6 +100,7 @@ def prepare_uid_text():
                     uid2text[uid] = text
                     uid += 1
     return uid2text
+
 
 def gen_speech(
     prompt_wav,
@@ -161,12 +164,12 @@ if __name__ == "__main__":
     g2p = G2p()
 
     speech_data = prepare_prompt_json()
-    
+
     uid2text = prepare_uid_text()
     # save uid2text
     with open("temp_meta_info/uid2text.json", "w") as f:
         json.dump(uid2text, f, indent=4)
-    
+
     for uid, target_text in uid2text.items():
         for i in range(5):
             wav, text = get_random_prompt(speech_data)
@@ -182,7 +185,7 @@ if __name__ == "__main__":
                 latent_codec_dec,
                 gpt_tts,
             )
-            target_path = (
-                "/home/t-zeqianju/yuancwang/temp_speech_env/{}_{}.wav".format(str(uid), str(i))
+            target_path = "/home/t-zeqianju/yuancwang/temp_speech_env/{}_{}.wav".format(
+                str(uid), str(i)
             )
             sf.write(target_path, gen_wav, 16000)
