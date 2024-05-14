@@ -5,7 +5,7 @@ from utils.g2p.english import english_to_ipa
 from utils.g2p.french import french_to_ipa
 from utils.g2p.korean import korean_to_ipa
 from utils.g2p.german import german_to_ipa
-patterns = [r'\[EN\](.*?)\[EN\]', r'\[ZH\](.*?)\[ZH\]', r'\[JA\](.*?)\[JA\]', r'\[FR\](.*?)\[FR\]', r'\[KR\](.*?)\[KR\]', r'\[DE\](.*?)\[DE\]']
+patterns = [r'\[EN\](.*?)\[EN\]', r'\[ZH\](.*?)\[ZH\]', r'\[JA\](.*?)\[JA\]', r'\[FR\](.*?)\[FR\]', r'\[KO\](.*?)\[KO\]', r'\[DE\](.*?)\[DE\]']
 
 def cje_cleaners(text):
 
@@ -36,8 +36,8 @@ def clean_one(text):
     if text.find('[FR]') != -1:
         text = re.sub(r'\[FR\](.*?)\[FR\]',
                       lambda x: french_to_ipa(x.group(1))+' ', text)
-    if text.find('[KR]') != -1:
-        text = re.sub(r'\[KR\](.*?)\[KR\]',
+    if text.find('[KO]') != -1:
+        text = re.sub(r'\[KO\](.*?)\[KO\]',
                       lambda x: korean_to_ipa(x.group(1))+' ', text)
     if text.find('[DE]') != -1:
         text = re.sub(r'\[DE\](.*?)\[DE\]',
