@@ -20,7 +20,7 @@ LANG2CODE = {
     'zh': 654,
     'en': 655,
     'ja': 656,
-    'kr': 657,
+    'ko': 657,
     'fr': 658,
     'de': 659,
 }
@@ -28,7 +28,7 @@ lang2token = {
     'zh': "[ZH]",
     "en": "[EN]",
     'ja': "[JA]",
-    "kr": "[KR]",
+    "ko": "[KO]",
     "fr": "[FR]",
     "de": "[DE]",
 }
@@ -40,7 +40,7 @@ class EmiliaDataset(Dataset):
                 access_key_secret=SK, 
                 bucket_name=bucket_name, 
                 resample_to_16k=False, 
-                from_database=True):
+                load_type='json'):
 
         # Initialize OSS client
         self.init_client(access_key_id, access_key_secret, bucket_name) # 建立连接
@@ -48,13 +48,14 @@ class EmiliaDataset(Dataset):
         self.json_paths = []
         self.wav_paths = []
         self.json_path2meta = {}
-        self.path_is_filtered = False
-        self.language_list = {'zh': 0.01, 'en': 0.01}
+        self.path_is_filtered = True
+        self.language_list = {'zh': 0.1, 'en': 0.1, 'ja': 0.1, 'ko': 0.1, 'fr': 0.1, 'de': 0.1}
         # Load paths from cache files if available, otherwise get them from OSS
         wav_paths_cache = "wav_paths_cache.pkl"
         filtered_wav_paths_cache = "filtered_wav_paths_cache.pkl"
         json_paths_cache = "json_paths_cache.pkl"
         json_path2meta = "json_path2meta.pkl"
+        data_json_path = 'Emilia-1k.json'
         if os.path.exists(filtered_wav_paths_cache) and os.path.exists(json_paths_cache):
             self.load_cached_paths(filtered_wav_paths_cache, json_paths_cache)
             self.path_is_filtered = True
@@ -62,16 +63,19 @@ class EmiliaDataset(Dataset):
             self.load_cached_paths(wav_paths_cache, json_paths_cache)
         else:
             logger.info("No cache exists")
-            if from_database:
+            if load_type == 'databse':
+
                 # Load path from database
                 self.get_all_paths_from_database(language="zh", duration_limit=self.language_list['zh'], filtered=False) # hours
                 self.get_all_paths_from_database(language="en", duration_limit=self.language_list['en'], filtered=False) # hours
                 # If need other language, change language and call it again
-            else:
+            elif load_type == 'oss':
                 # Load path from oss one by one
                 self.get_all_paths_form_oss(folder_path="qianyi/raw/xima_processed/", num_limit=100000) 
                 # If need other folder_path, change folder_path and call it again
-            self.save_cached_paths()
+            else:
+                self.get_all_paths_from_json(data_json_path)
+            self.save_cached_paths(wav_paths_cache, json_paths_cache)
                 
         self.wav_path_index2duration = []
         self.wav_path_index2phonelen = []
@@ -80,7 +84,7 @@ class EmiliaDataset(Dataset):
         if os.path.exists(json_path2meta):
             self.load_path2meta(json_path2meta)
         else:
-            self.get_jsoncache_multiprocess(pool_size=48)
+            self.get_jsoncache_multiprocess(wav_paths_cache, json_paths_cache, json_path2meta, pool_size=60)
         
         if not self.path_is_filtered:
             self.filter_by_meta()
@@ -110,10 +114,10 @@ class EmiliaDataset(Dataset):
             % (len(self.wav_paths), len(self.json_paths))
         )
 
-    def save_cached_paths(self):
-        with open("wav_paths_cache.pkl", "wb") as f:
+    def save_cached_paths(self, wav_paths_cache, json_paths_cache):
+        with open(wav_paths_cache, "wb") as f:
             pickle.dump(self.wav_paths, f)
-        with open("json_paths_cache.pkl", "wb") as f:
+        with open(json_paths_cache, "wb") as f:
             pickle.dump(self.json_paths, f)
         logger.info("Saved paths to cache files")
 
@@ -132,32 +136,30 @@ class EmiliaDataset(Dataset):
         json_path = path.split(bucket_name)[1][1:]
         self.json_paths.append(json_path)
         audio_name = json_path.split(".json")[0]
-        is_mp3 = True if 'mp3' in json_path else False
+        is_exists = True
         if idx is None:
+            first_test_wav = audio_name + "_0.wav"
+            if not self.bucket.object_exists(first_test_wav):
+                is_exists = False
             for i in range(num_wav):
                 wav_path = audio_name + "_" + str(i) + ".wav"
                 mp3_path = audio_name + "_" + str(i) + ".mp3"
-                try:
-                    if not is_mp3: # or self.bucket.object_exists(wav_path):
-                        self.wav_paths.append(wav_path)
-                    else:
-                        self.wav_paths.append(mp3_path)
-                except oss2.exceptions.NoSuchKey:
-                    continue
-                except oss2.exceptions.OssError as e:
-                    continue
+                if is_exists:
+                    self.wav_paths.append(wav_path)
+                else:
+                    self.wav_paths.append(mp3_path)
         else:
             idx = idx.split(',')
+            first_test_wav = audio_name + "_" + str(idx[0]) + ".wav"
+            if not self.bucket.object_exists(first_test_wav):
+                is_exists = False
             for x in idx:
-                try:
-                    wav_path = audio_name + "_" + str(x) + ".wav"
-                    mp3_path = audio_name + "_" + str(x) + ".mp3"
-                    if is_mp3 or self.bucket.object_exists(mp3_path):
-                        self.wav_paths.append(mp3_path)
-                    else:
-                        self.wav_paths.append(wav_path)
-                except oss2.exceptions.NoSuchKey:
-                    continue
+                wav_path = audio_name + "_" + str(x) + ".wav"
+                mp3_path = audio_name + "_" + str(x) + ".mp3"
+                if is_exists:
+                    self.wav_paths.append(wav_path)
+                else:
+                    self.wav_paths.append(mp3_path)
 
     def get_all_paths_from_database(self, language, duration_limit, filtered=False):
         logger.info("Start to get all {} paths".format(language))
@@ -261,6 +263,27 @@ class EmiliaDataset(Dataset):
             % (len(self.wav_paths), len(self.json_paths))
         )
 
+    def get_all_paths_from_json(self, json_path):
+        with open(json_path, 'r') as f:
+            json_data = f.read()
+            data_list = json.loads(json_data)
+
+        for data in tqdm.tqdm(data_list):
+            self.json_paths.append(data['json_path'])
+            is_exists = True
+            if not self.bucket.object_exists(data['wav_path'][0]):
+                is_exists = False
+            for wav in data['wav_path']:
+                if is_exists:
+                    self.wav_paths.append(wav)
+                else:
+                    if '.mp3' in wav:
+                        wav = wav.split('.')[0] + '.wav'
+                        self.wav_paths.append(wav)
+                    else:
+                        wav = wav.split('.')[0] + '.mp3'
+                        self.wav_paths.append(wav)
+
     def get_bounds(self, meta):
         avg_durations = []
         for m in meta:
@@ -306,11 +329,10 @@ class EmiliaDataset(Dataset):
             logger.info(
                 "Not found: http_status={0}, request_id={1}".format(e.status, e.request_id))
         except Exception as e:
-            logger.info("Error json: {}".format(json_path))
-        del json_cache
+            logger.info("Error json: {} error: {}".format(json_path, e))
         return json_meta
 
-    def get_jsoncache_multiprocess(self, pool_size):
+    def get_jsoncache_multiprocess(self, wav_paths_cache, json_paths_cache, json_path2meta, pool_size):
         logger.info("Start to build json pool")
         pool = Pool(pool_size)  # 创建进程池
         self.process_num = 0
@@ -318,20 +340,32 @@ class EmiliaDataset(Dataset):
         json2meta = pool.map(self.process_json_cache, self.json_paths)  # 多线程调用process_audio_wrapper
         pool.close()  # 关闭进程池
         pool.join()  # 等待所有进程完成
-        error_path_list = []
+        error_json_path_list = []
         for i in range(len(json2meta)):
-            if json2meta[i][0]['text'] == '-1' and json2meta[i][0]['phone_id'] == '-1':
-                error_path_list.append(self.json_paths[i])
+            if json2meta[i][0]['text'] == '-1' or json2meta[i][0]['phone_id'] == '-1':
+                error_json_path_list.append(self.json_paths[i])
             else:
                 self.json_path2meta[self.json_paths[i]] = json2meta[i]
         logger.info("Remove error path")
-        for error in error_path_list:
+        for error in error_json_path_list:
             self.json_paths.remove(error)
+        error_wav_path_list = []
+        for error in error_json_path_list:
+            error = error.split('.json')[0]
+            for wav in self.wav_paths:
+                if error in wav:
+                    error_wav_path_list.append(wav)
+        for error in error_wav_path_list:
+            self.wav_paths.remove(error)
+        with open(wav_paths_cache, "wb") as f:
+            pickle.dump(self.wav_paths, f)       
+        with open(json_paths_cache, "wb") as f:
+            pickle.dump(self.json_paths, f)
         # write to cache file
-        with open("json_path2meta.pkl", "wb") as f:
+        with open(json_path2meta, "wb") as f:
             pickle.dump(self.json_path2meta, f)
         logger.info("Json cache write to json_path2meta.pkl successfully")
-        del json2meta, error_path_list
+        del json2meta, error_json_path_list, error_wav_path_list
 
     def get_meta_from_wav_path(self, wav_path):
         index = int(wav_path.split("_")[-1].split(".")[0])  # 0
