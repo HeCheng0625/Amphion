@@ -90,9 +90,10 @@ def get_random_prompt(speech_data):
 def prepare_uid_text():
     json_dir = "/home/t-zeqianju/yuancwang/Amphion/temp_jsons/gpt_env_examples"
     uid2text = {}
-    uid = 0
+    uid = 175
     for file in os.listdir(json_dir):
-        if file.endswith(".json"):
+        # if file.endswith(".json"):
+        if file in ["beach_5.json", "beach_6.json", "beach_7.json", "beach_8.json", "beach_9.json"]:
             with open(os.path.join(json_dir, file), "r") as f:
                 data = json.load(f)
                 for example in data:
@@ -167,7 +168,7 @@ if __name__ == "__main__":
 
     uid2text = prepare_uid_text()
     # save uid2text
-    with open("temp_meta_info/uid2text.json", "w") as f:
+    with open("temp_meta_info/uid2text_add.json", "w") as f:
         json.dump(uid2text, f, indent=4)
 
     for uid, target_text in uid2text.items():

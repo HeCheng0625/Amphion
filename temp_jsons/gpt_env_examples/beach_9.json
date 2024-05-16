@@ -1,0 +1,62 @@
+[
+    {
+        "text": "Should I go for a run outside?",
+        "background": "raining and thundering",
+        "reply": [
+            "It might not be the best time for an outdoor run because of the storm. How about an indoor workout instead?",
+            "Given the thunder and rain, a treadmill or an indoor exercise routine would be safer today.",
+            "Running outside now could be risky due to the weather. Maybe try some yoga or stretching indoors?",
+            "Considering the weather sounds pretty bad, outdoor running isn't advisable. Do you have access to indoor gym equipment?",
+            "The thunder suggests it's not safe for a run outside. Perhaps a dance workout video at home could be fun?"
+        ],
+        "reason": "The presence of raining and thundering in the background suggests outdoor activities, such as running, might be unsafe or uncomfortable, prompting recommendations for indoor alternatives."
+    },
+    {
+        "text": "Can we have a barbecue party this afternoon?",
+        "background": "raining and thundering",
+        "reply": [
+            "A barbecue might not be enjoyable today with the thunderstorm. How about hosting an indoor game night instead?",
+            "Considering the weather, it might be best to move your party plans indoors. Perhaps a cooking party?",
+            "Looks like Mother Nature has other plans, so a barbecue could be challenging. Maybe an indoor movie marathon?",
+            "With the storm going on, an outdoor barbecue isn't ideal. What about a potluck dinner inside?",
+            "The rain and thunder mean an outdoor party might not work out. Ever thought of doing a virtual cook-off?"
+        ],
+        "reason": "The stormy weather condition would not permit an outdoor barbecue, suggesting the need for alternative indoor activities that can be equally engaging and enjoyable."
+    },
+    {
+        "text": "Is it a good day for sailing?",
+        "background": "raining and thundering",
+        "reply": [
+            "Sailing might not be safe with the current weather conditions. Perhaps a visit to a maritime museum?",
+            "Today's thunderstorm makes it dangerous to be out on the water. How about planning a different day for sailing?",
+            "Sailing in this weather could be risky. Maybe a cozy day at home with some maritime documentaries?",
+            "With the storm, it's not the ideal condition for sailing. What about a virtual sailing simulation game?",
+            "The rain and thunder suggest that sailing should be postponed. How about exploring some nautical maps and planning your next trip?"
+        ],
+        "reason": "Sailing during a thunderstorm is hazardous, prompting suggestions for safer, related activities that satisfy the interest in maritime adventures without the risk."
+    },
+    {
+        "text": "Shall we go for a beach day today?",
+        "background": "raining and thundering",
+        "reply": [
+            "A beach day might not be pleasant with the rain and thunder. How about a spa day at home with a tropical theme?",
+            "The beach under this weather could be unsafe. Maybe a visit to an indoor water park or aquarium?",
+            "Considering the storm, it's not the best day for the beach. What about a marine life documentary binge-watch?",
+            "A thunderstorm means the beach is off-limits today. How about crafting sea-themed decorations for your next sunny beach day?",
+            "Today's weather doesn't seem friendly for a beach outing. Perhaps preparing a summery indoor picnic could bring some sunshine inside?"
+        ],
+        "reason": "The adverse weather conditions make a beach day unfeasible, leading to suggestions for alternative activities that can bring a beach vibe indoors or offer a related, enjoyable experience."
+    },
+    {
+        "text": "What's a good activity for kids today?",
+        "background": "raining and thundering",
+        "reply": [
+            "With the storm outside, an indoor treasure hunt could be thrilling and keeps them active.",
+            "Considering the weather, how about a baking day? Kids love making (and eating) cookies!",
+            "Rainy days are perfect for crafting. Maybe they can make their own storybooks or rain sticks?",
+            "A movie marathon of their favorite cartoons or a new family movie could make a cozy day in.",
+            "Building a fort out of blankets and having a storytelling session inside could be magical for them."
+        ],
+        "reason": "The stormy weather necessitates indoor activities, which need to be safe, engaging, and suitable for children's entertainment and energy levels."
+    }
+]
