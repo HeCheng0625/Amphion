@@ -186,7 +186,7 @@ if __name__ == "__main__":
                 latent_codec_dec,
                 gpt_tts,
             )
-            target_path = "/home/t-zeqianju/yuancwang/temp_speech_env/{}_{}.wav".format(
+            target_path = "/home/t-zeqianju/yuancwang/temp_speech_env/speech/{}_{}.wav".format(
                 str(uid), str(i)
             )
             sf.write(target_path, gen_wav, 16000)

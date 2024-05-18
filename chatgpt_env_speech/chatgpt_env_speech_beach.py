@@ -13,7 +13,7 @@ def is_json(myjson):
     return True
 
 
-for index in tqdm(range(0, 5)):
+for index in tqdm(range(9, 10)):
     try:
         client = OpenAI(api_key="")
         completion = client.chat.completions.create(
