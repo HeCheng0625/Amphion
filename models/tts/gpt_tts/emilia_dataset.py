@@ -97,7 +97,7 @@ class EmiliaDataset(Dataset):
             if os.path.exists(self.json_path2meta_cache):
                 self.load_path2meta()
             else:
-                self.get_jsoncache_multiprocess(pool_size=36)
+                self.get_jsoncache_multiprocess(pool_size=8)
     
         self.num_frame_indices = np.array(sorted(range(len(self.index2num_frames)), key=lambda k: self.index2num_frames[k]))
 
@@ -247,7 +247,7 @@ class EmiliaDataset(Dataset):
             json2meta.append(self.get_phone_count_and_duration(json, self.json2filtered_idx[path]))
         error_json_path_list = []
         for i in range(len(json2meta)):
-            if json2meta[i]:
+            if not json2meta[i]:
                 error_json_path_list.append(self.json_paths[i])
             elif json2meta[i][next(iter(json2meta[i]))]['language'] not in self.language_list:
                 language = json2meta[i][next(iter(json2meta[i]))]['language']
