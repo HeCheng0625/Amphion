@@ -51,7 +51,7 @@ class EmiliaDataset(Dataset):
                 access_key_id=AK, 
                 access_key_secret=SK, 
                 bucket_name=bucket_name, 
-                cache_type='meta'): # 'path' or 'meta'
+                cache_type='path'): # 'path' or 'meta'
         self.cache_type = cache_type
 
         # Initialize OSS client
@@ -174,6 +174,8 @@ class EmiliaDataset(Dataset):
             self.index2num_frames.append(duration * num_token_per_second + phone_count)
         
         self.json2filtered_idx[data['json_path']] = [int(i) for i in data['filtered_idx'].split(',') if i not in remove_idx]
+        if not self.json2filtered_idx[data['json_path']]:
+            self.json_paths.pop()
 
     def get_all_paths_from_json(self, json_path):
 
@@ -324,6 +326,9 @@ class EmiliaDataset(Dataset):
 
         wav_path = self.wav_paths[idx] 
         file_bytes = None
+        position = np.where(self.num_frame_indices == idx)[0][0]
+        random_index = np.random.choice(self.num_frame_indices[:position])
+        del position
         try:
             for i in range(3):
                 try:
@@ -335,9 +340,6 @@ class EmiliaDataset(Dataset):
                     print("retry")
         except:
             logger.info("Get data from oss failed. Get another.")
-            position = np.where(self.num_frame_indices == idx)[0][0]
-            random_index = np.random.choice(self.num_frame_indices[:position])
-            del position
             return self.__getitem__(random_index)
 
         meta = self.get_meta_from_wav_path(wav_path)
@@ -349,21 +351,23 @@ class EmiliaDataset(Dataset):
             pad_shape = ((shape[0] // 200) + 1) * 200 - shape[0]
             speech = np.pad(speech, (0, pad_shape), mode='constant')
             del buffer, pad_shape, shape
-            speech_tensor = torch.tensor(speech, dtype=torch.float32)
-            
-            phone_id = self.g2p(meta['text'], meta['language'])[1] if self.cache_type == 'path' else meta['phone_id']
-            phone_id = torch.tensor(phone_id, dtype=torch.long)
-            phone_id = torch.cat([torch.tensor(LANG2CODE[meta['language']], dtype=torch.long).reshape(1), phone_id]) # add language token
-            del meta, speech, sr
-            return dict(
-                speech=speech_tensor,
-                phone_id=phone_id,
-            )
+
+            if speech.shape[0] < default_sr * duration_setting['min'] and speech.shape[0] > default_sr * duration_setting['max']:
+                logger.info("Wav length exceeds the requirement")
+                return self.__getitem__(random_index)
+            else:
+                speech_tensor = torch.tensor(speech, dtype=torch.float32)
+                
+                phone_id = self.g2p(meta['text'], meta['language'])[1] if self.cache_type == 'path' else meta['phone_id']
+                phone_id = torch.tensor(phone_id, dtype=torch.long)
+                phone_id = torch.cat([torch.tensor(LANG2CODE[meta['language']], dtype=torch.long).reshape(1), phone_id]) # add language token
+                del meta, speech, sr
+                return dict(
+                    speech=speech_tensor,
+                    phone_id=phone_id,
+                )
         else:
             logger.info("Failed to get file after retries.")
-            position = np.where(self.num_frame_indices == idx)[0][0]
-            random_index = np.random.choice(self.num_frame_indices[:position])
-            del position
             return self.__getitem__(random_index)
 
 if __name__ == '__main__':
