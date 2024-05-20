@@ -39,6 +39,8 @@ bins/svc/preprocess_custom.py
 data
 ckpts
 terminal
+cache
+*.ipynb_checkpoints
 
 # Data and ckpt
 *.pkl
@@ -58,6 +60,7 @@ processed_data
 data
 model_ckpt
 logs
+Emilia-zh+en
 # *.ipynb
 *.lst
 source_audio
