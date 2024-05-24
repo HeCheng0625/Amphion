@@ -76,7 +76,7 @@
     "train": {
         "max_epoch": 0,
         "use_dynamic_batchsize": true,
-        "max_tokens": 1000000,
+        "max_tokens": 3200000,
         "max_sentences": 48,
         "lr_warmup_steps": 32000,
         "lr_scheduler": "inverse_sqrt",
