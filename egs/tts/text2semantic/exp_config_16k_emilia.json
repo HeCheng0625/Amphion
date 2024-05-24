@@ -11,17 +11,15 @@
     },
     "model": {
         "soundstorm": {
-            "num_quantizer": 8,    // number of quantizers, 8 for 16KHz, 12 for 24KHz
-            "hidden_size": 1024,
-            "num_layers": 16,
-            "num_heads": 16,
-            "codebook_size": 1024,
-            "cfg_scale": 0.15,
-            "mask_layer_schedule": "linear",
-            "use_cond_code": true,
-            "cond_codebook_size": 2048,
-            "cond_dim":1024,
-            "use_llama_style": false
+            "phone_vocab_size": 656,
+            "target_vocab_size": 2048,
+            "pad_token_id": 2705,
+            "bos_target_id": 2706,
+            "eos_target_id": 2707,
+            "bos_phone_id": 2708,
+            "eos_phone_id": 2709,
+            "bos_prompt_id": 2710,
+            "eos_prompt_id": 2711
         },
         "kmeans": {
             "type": "kmeans_ema",
@@ -74,11 +72,11 @@
             }
         }
     },
-    "log_dir": "/mnt/bn/yuacnwang-speech/ckpt/soundstorm",
+    "log_dir": ".",
     "train": {
         "max_epoch": 0,
         "use_dynamic_batchsize": true,
-        "max_tokens": 4800000,
+        "max_tokens": 1000000,
         "max_sentences": 48,
         "lr_warmup_steps": 32000,
         "lr_scheduler": "inverse_sqrt",
@@ -102,8 +100,8 @@
         "keep_last": [10],
         "run_eval": [true],
         "dataloader": {
-          "num_worker": 4,
-          "pin_memory": true
+          "num_worker": 0,
+          "pin_memory": false
         },
         "use_emilia_dataset": true
     }

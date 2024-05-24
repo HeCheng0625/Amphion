@@ -1,6 +1,10 @@
 # Mac OS files
 .DS_Store
 
+ckpt
+checkpoint
+log
+
 # IDEs
 .idea
 .vs

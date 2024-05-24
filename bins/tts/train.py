@@ -14,7 +14,7 @@ import torch
 from models.tts.gpt_tts.gpt_tts_trainer import NS2Trainer as GPTTTSTrainer
 from models.codec.kmeans.kmeans_trainer import KMeansTrainer
 from models.codec.amphion_codec.codec_trainer import CodecTrainer
-from models.tts.soundstorm.soundstorm_trainer import SoundStormTrainer
+from models.tts.text2semantic.soundstorm_trainer import SoundStormTrainer
 from utils.util import load_config
 
 
