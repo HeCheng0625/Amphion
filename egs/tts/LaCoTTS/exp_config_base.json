@@ -82,7 +82,7 @@
         "lr_scheduler": "inverse_sqrt",
         "num_train_steps": 800000,
         "adam": {
-            "lr": 6e-5
+            "lr": 5e-5
         },
         "ddp": false,
         "random_seed": 114,
@@ -100,9 +100,10 @@
         "keep_last": [3],
         "run_eval": [true],
         "dataloader": {
-          "num_worker": 4,
-          "pin_memory": false
-        }
+            "num_worker": 64,
+            "prefetch_factor": 64,
+            "pin_memory": true
+          }
     },
     "trans_exp": {
         "dataset_list":["mls_train"],

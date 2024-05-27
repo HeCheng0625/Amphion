@@ -15,7 +15,7 @@ export PYTHONIOENCODING=UTF-8
 ######## Set Experiment Configuration ###########
 exp_config="$exp_dir/exp_config_base.json"
 exp_name="latent_codec_gpt_tts"
-checkpoint_path="$work_dir/exps/latent_codec_gpt_tts/epoch-0002_step-0009800_loss-7.734620/"
+checkpoint_path="$work_dir/exps/latent_codec_gpt_tts/epoch-0019_step-0091200_loss-7.211241/"
 resume_type="resume"
 export PHONEMIZER_ESPEAK_LIBRARY=/usr/lib/x86_64-linux-gnu/libespeak-ng.so.1 
 export PHONEMIZER_ESPEAK_PATH=/usr/bin/espeak-ng 

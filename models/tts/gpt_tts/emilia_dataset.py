@@ -41,7 +41,7 @@ LANG2CODE = {
 }
 
 
-data_json_path = './Emilia-zh+en/Emilia-1k.json.gz'
+data_json_path = './Emilia-zh+en/Emilia-50k.json.gz'
 num_token_per_second = 80
 default_sr = 16000  # it may need to change sampling rate
 duration_setting = {'min': 0, 'max': 25}

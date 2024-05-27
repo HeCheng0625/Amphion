@@ -61,6 +61,8 @@ data
 model_ckpt
 logs
 Emilia-zh+en
+examples
+gen_data
 # *.ipynb
 *.lst
 source_audio
