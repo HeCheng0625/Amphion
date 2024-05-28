@@ -15,8 +15,8 @@ export PYTHONIOENCODING=UTF-8
 ######## Set Experiment Configuration ###########
 exp_config="$exp_dir/exp_config.json"
 exp_name="ns2_libritts"
-ref_audio="$work_dir/egs/tts/NaturalSpeech2/prompt_example/ref_audio.wav"
-checkpoint_path="$work_dir/ckpts/tts/naturalspeech2_libritts/checkpoint/epoch-0089_step-0512912_loss-6.367693"
+ref_audio="$work_dir/examples/ref/1.wav"
+checkpoint_path="$work_dir/ckpts/ns2/"
 output_dir="$work_dir/output"
 mode="single"
 

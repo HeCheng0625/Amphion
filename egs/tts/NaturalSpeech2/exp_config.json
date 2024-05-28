@@ -35,5 +35,92 @@
         "lr_warmup_steps": 5000,
         "lr_scheduler": "cosine",
         "num_train_steps": 800000
-    }
+    },
+    "model": {
+      "reference_encoder": {
+          "encoder_layer": 6,
+          "encoder_hidden": 512,
+          "encoder_head": 8,
+          "conv_filter_size": 2048,
+          "conv_kernel_size": 9,
+          "encoder_dropout": 0.2,
+          "use_skip_connection": false,
+          "use_new_ffn": true,
+          "ref_in_dim": 256,
+          "ref_out_dim": 512,
+          "use_query_emb": true,
+          "num_query_emb": 32
+      },
+      "diffusion": {
+          "diffusion_type": "diffusion",   // Option: "diffusion" or "flow matching"
+          "beta_min": 0.05,
+          "beta_max": 20,
+          "sigma": 1.0,
+          "noise_factor": 1.0,
+          "ode_solve_method": "euler",
+          "diff_model_type": "WaveNet",   // Transformer or WaveNet
+          "diff_wavenet":{
+              "input_size": 256,
+              "hidden_size": 512,
+              "out_size": 256,
+              "num_layers": 40,
+              "cross_attn_per_layer": 3,
+              "dilation_cycle": 2,
+              "attn_head": 8,
+              "drop_out": 0.2
+          }
+      },
+      "prior_encoder": {
+          "encoder_layer": 6,
+          "encoder_hidden": 512,
+          "encoder_head": 8,
+          "conv_filter_size": 2048,
+          "conv_kernel_size": 9,
+          "encoder_dropout": 0.2,
+          "use_skip_connection": false,
+          "use_new_ffn": true,
+          "vocab_size": 256,
+          "cond_dim": 512,
+          "duration_predictor": {
+              "input_size": 512,
+              "filter_size": 512,
+              "kernel_size": 3,
+              "conv_layers": 30,
+              "cross_attn_per_layer": 3,
+              "attn_head": 8,
+              "drop_out": 0.2
+          },
+          "pitch_predictor": {
+              "input_size": 512,
+              "filter_size": 512,
+              "kernel_size": 5,
+              "conv_layers": 30,
+              "cross_attn_per_layer": 3,
+              "attn_head": 8,
+              "drop_out": 0.5
+          },
+          "pitch_min": 50,
+          "pitch_max": 1100,
+          "pitch_bins_num": 512
+      },
+      "codec": {
+          "encoder": {
+              "d_model": 32,
+              "up_ratios": [2, 4, 5, 5],
+              "use_tanh": false,
+              "out_channels": 256,
+              "pretrained_ckpt": "ckpts/ns2/codec_enc.bin"
+          },
+          "decoder": {
+              "in_channels": 256,
+              "upsample_initial_channel": 512,
+              "up_ratios": [5, 5, 4, 2],
+              "num_quantizers": 12,
+              "codebook_size": 1024,
+              "codebook_dim": 256,
+              "quantizer_dropout": 0.0,
+              "pretrained_ckpt": "ckpts/ns2/codec_dec.bin"
+          }
+      }
+  }
   }
