@@ -319,7 +319,6 @@ class EmiliaDataset(Dataset):
             try:
                 # file_bytes = self.bucket.get_object(json_path)
                 # buffer = io.BytesIO(file_bytes.read())
-                json_path = json_path
                 file_bytes = self.bucket.get_object(Bucket=bucket_name, Key=json_path)
                 buffer = io.BytesIO(file_bytes["Body"].get_raw_stream().read())
                 meta = json.load(buffer)[index]
@@ -354,7 +353,6 @@ class EmiliaDataset(Dataset):
             for i in range(3):
                 try:
                     # file_bytes = self.bucket.get_object(wav_path.replace("_new", ""))
-                    
                     file_bytes = self.bucket.get_object(Bucket=bucket_name, Key=wav_path)
                     break
                 except Exception as e:
