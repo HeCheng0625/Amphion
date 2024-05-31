@@ -14,7 +14,7 @@ import pickle
 import os
 import time
 from torch.utils.data import Dataset
-from utils.g2p.g2p import phonemizer_g2p
+from utils.g2p import PhonemeBpeTokenizer
 from multiprocessing import Pool
 import concurrent.futures
 from pathlib import Path
@@ -60,7 +60,7 @@ class EmiliaDataset(Dataset):
         cache_type="path",
     ):  # "path" or "meta"
         self.cache_type = cache_type
-
+        self.text_tokenizer = PhonemeBpeTokenizer()
         # Initialize OSS client
         self.init_client(access_key_id, access_key_secret, bucket_name)
         self.json_paths = []
@@ -333,7 +333,8 @@ class EmiliaDataset(Dataset):
         return meta
 
     def g2p(self, text, language):
-        return phonemizer_g2p(text, language)
+        print(text)
+        return self.text_tokenizer.tokenize(text, language)
     
     def get_num_frames(self, index):
         return self.wav_path_index2duration[index] * num_token_per_second + self.wav_path_index2phonelen[index]
@@ -349,10 +350,11 @@ class EmiliaDataset(Dataset):
         random_index = np.random.choice(self.num_frame_indices[:position])
         del position
         try:
+            wav_path = mnt_path + wav_path.replace("_new", "")
             for i in range(3):
                 try:
                     # file_bytes = self.bucket.get_object(wav_path.replace("_new", ""))
-                    wav_path = mnt_path + wav_path.replace("_new", "")
+                    
                     file_bytes = self.bucket.get_object(Bucket=bucket_name, Key=wav_path)
                     break
                 except Exception as e:
