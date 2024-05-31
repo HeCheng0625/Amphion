@@ -7,7 +7,9 @@
 ######## Build Experiment Environment ###########
 exp_dir=$(cd `dirname $0`; pwd)
 work_dir=$(dirname $(dirname $(dirname $exp_dir)))
+mkdir -p $work_dir/terminal
 
+export TMPDIR=$work_dir/terminal
 export WORK_DIR=$work_dir
 export PYTHONPATH=$work_dir
 export PYTHONIOENCODING=UTF-8
@@ -15,7 +17,7 @@ export PYTHONIOENCODING=UTF-8
 ######## Set Experiment Configuration ###########
 exp_config="$exp_dir/exp_config_base.json"
 exp_name="latent_codec_gpt_tts"
-checkpoint_path="$work_dir/exps/latent_codec_gpt_tts/epoch-0019_step-0091200_loss-7.211241/"
+checkpoint_path="$work_dir/exps/latent_codec_gpt_tts/epoch-0027_step-0052000_loss-7.203510/"
 resume_type="resume"
 export PHONEMIZER_ESPEAK_LIBRARY=/usr/lib/x86_64-linux-gnu/libespeak-ng.so.1 
 export PHONEMIZER_ESPEAK_PATH=/usr/bin/espeak-ng 
