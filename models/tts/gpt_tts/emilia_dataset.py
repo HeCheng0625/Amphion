@@ -159,6 +159,7 @@ class EmiliaDataset(Dataset):
         self.json_paths.append(data["json_path"])
         is_exists = True
         try:
+            # if not self.bucket.object_exists(data["wav_path"][0])
             key = mnt_path + data["wav_path"][0]
             if not self.bucket.object_exists(Bucket=bucket_name, Key=key):
                 is_exists = False
