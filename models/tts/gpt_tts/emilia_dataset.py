@@ -19,17 +19,21 @@ from multiprocessing import Pool
 import concurrent.futures
 from pathlib import Path
 
-class PhonemizerWarningFilter(logging.Filter):
+class WarningFilter(logging.Filter):
     def filter(self, record):
         # 只过滤 phonemizer 中的 WARNING 级别日志
         if record.name == "phonemizer" and record.levelno == logging.WARNING:
             return False
+        if record.name == "qcloud_cos.cos_client" and record.levelno == logging.INFO:
+            return False
+        if record.name == "jieba" and record.levelno == logging.DEBUG:
+            return False
         return True
 
-
-logger = logging.getLogger("phonemizer")
-filter = PhonemizerWarningFilter()
-logger.addFilter(filter)
+filter = WarningFilter()
+logging.getLogger("phonemizer").addFilter(filter)
+logging.getLogger("qcloud_cos.cos_client").addFilter(filter)
+logging.getLogger("jieba").addFilter(filter)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
