@@ -7,9 +7,7 @@
 ######## Build Experiment Environment ###########
 exp_dir=$(cd `dirname $0`; pwd)
 work_dir=$(dirname $(dirname $(dirname $exp_dir)))
-mkdir -p $work_dir/terminal
 
-export TMPDIR=$work_dir/terminal
 export WORK_DIR=$work_dir
 export PYTHONPATH=$work_dir
 export PYTHONIOENCODING=UTF-8
@@ -17,17 +15,35 @@ export PYTHONIOENCODING=UTF-8
 ######## Set Experiment Configuration ###########
 exp_config="$exp_dir/exp_config_base.json"
 exp_name="latent_codec_gpt_tts"
-checkpoint_path="$work_dir/exps/latent_codec_gpt_tts/epoch-0027_step-0052000_loss-7.203510/"
+checkpoint_path="$work_dir/exps/latent_codec_gpt_tts/epoch-0047_step-0084600_loss-7.589928/"
 resume_type="resume"
 export PHONEMIZER_ESPEAK_LIBRARY=/usr/lib/x86_64-linux-gnu/libespeak-ng.so.1 
 export PHONEMIZER_ESPEAK_PATH=/usr/bin/espeak-ng 
 
 ######## Train Model ###########
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 accelerate launch \
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7,8,9,10,11 accelerate launch \
     "${work_dir}"/bins/tts/train.py \
     --config=$exp_config \
     --exp_name=$exp_name \
     --log_level debug \
     --resume \
     --resume_type=$resume_type \
-    --checkpoint_path=$checkpoint_path 
+    --dataloader_seed 751942 \
+
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7,8,9,10,11 accelerate launch \
+    "${work_dir}"/bins/tts/train.py \
+    --config=$exp_config \
+    --exp_name=$exp_name \
+    --log_level debug \
+    --resume \
+    --resume_type=$resume_type \
+    --dataloader_seed 842310 \
+
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7,8,9,10,11 accelerate launch \
+    "${work_dir}"/bins/tts/train.py \
+    --config=$exp_config \
+    --exp_name=$exp_name \
+    --log_level debug \
+    --resume \
+    --resume_type=$resume_type \
+    --dataloader_seed 964832 \

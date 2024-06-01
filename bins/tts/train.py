@@ -74,7 +74,12 @@ def main():
         default=None,
         help="Checkpoint for resume training or finetuning.",
     )
-
+    parser.add_argument(
+        "--dataloader_seed",
+        type=int,
+        default=1,
+        help="Seed for dataloader",
+    )
     VALLETrainer.add_arguments(parser)
     args = parser.parse_args()
     cfg = load_config(args.config)

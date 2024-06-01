@@ -308,7 +308,7 @@ class NS2Trainer(TTSTrainer):
                 * self.accelerator.num_processes,
                 required_batch_size_multiple=self.accelerator.num_processes,
             )
-            np.random.seed(987210)
+            np.random.seed(self.args.dataloader_seed)
             np.random.shuffle(batch_sampler)
             print(batch_sampler[:1])
             batches = [

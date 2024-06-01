@@ -333,7 +333,6 @@ class EmiliaDataset(Dataset):
         return meta
 
     def g2p(self, text, language):
-        print(text)
         return self.text_tokenizer.tokenize(text, language)
     
     def get_num_frames(self, index):
@@ -379,7 +378,7 @@ class EmiliaDataset(Dataset):
                 return self.__getitem__(random_index)
             else:
                 speech_tensor = torch.tensor(speech, dtype=torch.float32)
-                
+                # print(meta["text"], wav_path)
                 phone_id = self.g2p(meta["text"], meta["language"])[1] if self.cache_type == "path" else meta["phone_id"]
                 phone_id = torch.tensor(phone_id, dtype=torch.long)
                 phone_id = torch.cat([torch.tensor(LANG2CODE[meta["language"]], dtype=torch.long).reshape(1), phone_id]) # add language token
