@@ -114,9 +114,10 @@ _bopomofo_to_ipa = [(re.compile('%s' % x[0]), x[1]) for x in [
 
 # Convert numbers to Chinese pronunciation
 def number_to_chinese(text):
-    numbers = re.findall(r'\d+(?:\.?\d+)?', text)
-    for number in numbers:
-        text = text.replace(number, cn2an.an2cn(number), 1)
+    # numbers = re.findall(r'\d+(?:\.?\d+)?', text)
+    # for number in numbers:
+    #     text = text.replace(number, cn2an.an2cn(number), 1)
+    text = cn2an.transform(text, "an2cn")
     return text
 
 # Word Segmentation, and convert Chinese pronunciation to pinyin (bopomofo)
