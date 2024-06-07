@@ -1,4 +1,3 @@
-'''https://github.com/bootphon/phonemizer'''
 import re
 
 '''
@@ -87,16 +86,6 @@ rep_map = {
     "¡" : ""
 }
 
-_special_map = [(re.compile('%s' % x[0]), x[1]) for x in [
-    ('ø', 'ɸ'),
-    ('\u0303', '~'),
-    ('ã', 'a~'),
-    ('ɑ̃', 'ɑ~'),
-    ('ɔ̃', 'ɔ~'),
-    ('ɛ̃', 'ɛ~'),
-    ('œ̃', 'œ~'),
-]]
-
 def collapse_whitespace(text):
     # Regular expression matching whitespace:
     _whitespace_re = re.compile(r"\s+")
@@ -136,65 +125,12 @@ def text_normalize(text):
     text = re.sub(r'([^\.,!\?\-…])$', r'\1', text)
     return text
 
-# special map
-def special_map(text):
-    for regex, replacement in _special_map:
-        text = re.sub(regex, replacement, text)
-    return text
-
 def french_to_ipa(text, text_tokenizer):
-    text = text_normalize(text)
-    phonemes = text_tokenizer(text.strip())
-    phonemes = '|'.join(phonemes)
-    return phonemes
-
-'''
-    Phoneme merge time
-'''
-connect_list = [
-    [47, 644],                  # "ɔː"
-    [18, 644],                  # "aː"
-    [25, 644],                  # "iː"
-    [31, 644],                  # "oː"
-    [19, 41],                   # "a~"
-    [46, 41],                   # "ɑ~"
-    [47, 41],                   # "ɔ~"
-    [49, 41],                   # "ɛ~"
-    [636, 41]                   # "œ~"
-] 
-
-
-final_result = [
-    656,                # "ɔː"
-    638,                # "aː"
-    672,                # "iː"
-    674,                # "oː"
-    639,                # "a~"
-    640,                # "ɑ~"
-    641,                # "ɔ~"
-    642,                # "ɛ~"
-    643                 # "œ~"
-]
-
-def _connect_phone(phoneme_tokens, vocab):
-
-    separator = ',' + str(663) + ','
-    token_str = ','.join(map(str, phoneme_tokens))
-    token_str = separator + token_str + separator
-    for idx, sub in enumerate(connect_list):
-        sub_str = separator + ','.join(map(str, sub)) + separator
-        if sub_str in token_str:
-            replace_str = separator + str(final_result[idx]) + separator
-            token_str = token_str.replace(sub_str, replace_str)
-    token_str = token_str.replace(separator, ',')[1:-1]
-    result_tokens = list(map(int, token_str.split(',')))
-    del token_str
-    return result_tokens
-
-# Convert IPA to token
-def french_merge_phoneme(phoneme_tokens, vocab):
-
-    phoneme_tokens = _connect_phone(phoneme_tokens, vocab)
-    # print('merge phoneme: ', phoneme_tokens)
-
-    return phoneme_tokens
+    if type(text) == str:
+        text = text_normalize(text)
+        phonemes = text_tokenizer(text)
+        return phonemes
+    else:
+        for i, t in enumerate(text):
+            text[i] = text_normalize(t)
+        return text_tokenizer(text)
