@@ -18,7 +18,7 @@ class TextTokenizer:
         language="en-us",
         backend="espeak",
         separator=Separator(word="|_|", syllable="-", phone="|"),
-        preserve_punctuation=False,
+        preserve_punctuation=True,
         punctuation_marks: Union[str, Pattern] = Punctuation.default_marks(),
         with_stress: bool = False,
         tie: Union[bool, str] = False,
@@ -41,9 +41,13 @@ class TextTokenizer:
 
         text_type = type(text)
         text = [re.sub(r'[^\w\s_,\.\?!\|\']', '', line.strip()) for line in str2list(text)]
+        text = [re.sub(r'([,\.!\?])\s+', r'\1', line) for line in str2list(text)]
         phonemized = self.backend.phonemize(
             text, separator=self.separator, strip=strip, njobs=1
         )
         if text_type == str:
-            return list2str(phonemized)
+            phonemized = re.sub(r'([,.!?])', r'|\1|', list2str(phonemized))
+        else:
+            for i in range(len(phonemized)):
+                phonemized[i] = re.sub(r'([,.!?])', r'|\1|', phonemized[i])
         return phonemized

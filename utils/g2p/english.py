@@ -123,7 +123,7 @@ def special_map(text):
         regex = regex.replace("|", "\|")
         while re.search(r'(^|[_|]){}([_|]|$)'.format(regex), text):
             text = re.sub(r'(^|[_|]){}([_|]|$)'.format(regex), r'\1{}\2'.format(replacement), text)
-    text = re.sub(r'([,.!?])', r'|\1', text)
+    # text = re.sub(r'([,.!?])', r'|\1', text)
     return text
 
 # Add some special operation
