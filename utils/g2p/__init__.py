@@ -6,7 +6,7 @@ import re
 
 class PhonemeBpeTokenizer:
 
-  def __init__(self, vacab_path="./utils/g2p/vacab.json"):
+  def __init__(self, vacab_path="./utils/g2p/vocab.json"):
     self.lang2backend = {
         'zh': "cmn",
         'ja': "ja",

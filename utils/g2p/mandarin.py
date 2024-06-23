@@ -105,11 +105,6 @@ _bopomofo_to_ipa = [(re.compile('%s' % x[0]), x[1]) for x in [
     ('ˇ', '↓↑|'),
     ('ˋ', '↓|'),
     ('˙', '|'),
-    ('，', ','),
-    ('。', '.'),
-    ('！', '!'),
-    ('？', '?'),
-    ('—', '-'),
 ]]
 
 # Convert numbers to Chinese pronunciation
@@ -120,11 +115,28 @@ def number_to_chinese(text):
     text = cn2an.transform(text, "an2cn")
     return text
 
+def normalization(text):
+    text = text.replace("，", ",")
+    text = text.replace("。", ".")
+    text = text.replace("！", "!")
+    text = text.replace("？", "?")
+    text = text.replace("；", ";")
+    text = text.replace("：", ":")
+    text = text.replace("、", ",")
+    text = text.replace("‘", "'")
+    text = text.replace("’", "'")
+    text = text.replace("⋯", "…")
+    text = text.replace("···", "…")
+    text = text.replace("・・・", "…")
+    text = text.replace("...", "…")
+    text = re.sub(r"\s+", "", text)
+    text = re.sub(r'[^\u4e00-\u9fff\s_,\.\?!;:\'…]', '', text)
+    text = re.sub(r'\s*([,\.\?!;:\'…])\s*', r'\1', text)
+    return text
+
 # Word Segmentation, and convert Chinese pronunciation to pinyin (bopomofo)
 def chinese_to_bopomofo(text):
     from pypinyin import lazy_pinyin, BOPOMOFO
-    text = text.replace('、', '，').replace('；', '，').replace('：', '，')
-    text = re.sub(r"\s+", "", text)
     words = jieba.lcut(text, cut_all=False)
     text = ''
     for word in words:
@@ -153,15 +165,18 @@ def bopomofo_to_ipa(text):
 
 def _chinese_to_ipa(text):
     text = number_to_chinese(text.strip())
+    text = normalization(text)
+    # print("Normalized text: ", text)
     text = chinese_to_bopomofo(text)
     text = latin_to_bopomofo(text)
     text = bopomofo_to_ipa(text)
     text = re.sub('([sɹ]`[⁼ʰ]?)([→↓↑ ]+|$)',
                   r'\1ɹ\2', text)
     text = re.sub('([s][⁼ʰ]?)([→↓↑ ]+|$)', r'\1ɹ\2', text)
-    text = re.sub(r'^\||[^\w\s_,\.\?!\|\'→↓↑⁼ʰ`]', '', text)
-    text = re.sub(r'([,.!?])', r'|\1', text)
+    text = re.sub(r'^\||[^\w\s_,\.\?!;:\'…\|→↓↑⁼ʰ`]', '', text)
+    text = re.sub(r'([,\.\?!;:\'…])', r'|\1|', text)
     text = re.sub(r'\|+', '|', text)
+    text = text.rstrip('|')
     return text
 
 # Convert Chinese to IPA

@@ -6,7 +6,7 @@ import numpy as np
 import traceback
 import pyopenjtalk
 from pykakasi import kakasi
-punctuation = ["!", "?", ",", "."]
+punctuation = [",", ".", "!", "?", ":", ";", "'", "…"]
 
 jp_xphone2ipa = [
     " a a",
@@ -38,7 +38,7 @@ jp_xphone2ipa = [
     " p p",
     " q q",
     " v v",
-    " : ː",
+    " : :",
     " by b j",
     " ch t ɕ",
     " dy d e j",
@@ -239,50 +239,50 @@ mora_kata_to_mora_phonemes: dict[str, tuple[Optional[str], str]] = {
 
 # 正規化で記号を変換するための辞書
 rep_map = {
-    "：": ",",
-    "；": ",",
+    "：": ":",
+    "；": ";",
     "，": ",",
     "。": ".",
     "！": "!",
     "？": "?",
     "\n": ".",
     "．": ".",
-    "…": "⋯",
-    "···": "⋯",
-    "・・・": "⋯",
+    "⋯": "…",
+    "···": "…",
+    "・・・": "…",
     "·": ",",
     "・": ",",
     "•": ",",
     "、": ",",
     "$": ".",
-    "“": "'",
-    "”": "'",
-    '"': "'",
+    # "“": "'",
+    # "”": "'",
+    # '"': "'",
     "‘": "'",
     "’": "'",
-    "（": "'",
-    "）": "'",
-    "(": "'",
-    ")": "'",
-    "《": "'",
-    "》": "'",
-    "【": "'",
-    "】": "'",
-    "[": "'",
-    "]": "'",
-    "——": "-",
-    "−": "-",
-    "-": "-",
-    "『": "'",
-    "』": "'",
-    "〈": "'",
-    "〉": "'",
-    "«": "'",
-    "»": "'",
-    # "～": "-",  # これは長音記号「ー」として扱うよう変更
-    # "~": "-",  # これは長音記号「ー」として扱うよう変更
-    "「": "'",
-    "」": "'",
+    # "（": "'",
+    # "）": "'",
+    # "(": "'",
+    # ")": "'",
+    # "《": "'",
+    # "》": "'",
+    # "【": "'",
+    # "】": "'",
+    # "[": "'",
+    # "]": "'",
+    # "——": "-",
+    # "−": "-",
+    # "-": "-",
+    # "『": "'",
+    # "』": "'",
+    # "〈": "'",
+    # "〉": "'",
+    # "«": "'",
+    # "»": "'",
+    # # "～": "-",  # これは長音記号「ー」として扱うよう変更
+    # # "~": "-",  # これは長音記号「ー」として扱うよう変更
+    # "「": "'",
+    # "」": "'",
 }
 
 def _numeric_feature_by_regex(regex, s):
@@ -646,6 +646,9 @@ class JapanesePhoneConverter(object):
                     "!",
                     "'",
                     "-",
+                    "?",
+                    ":",
+                    ";",
                     "⋯",
                     "",
                 ):
@@ -685,6 +688,7 @@ class JapanesePhoneConverter(object):
         output_before_sil_flag = []
         normed_text = []
         sentence = sentence.strip().strip('\'')
+        sentence = re.sub(r"\s+", "", sentence)
         output_res = []
         failed_words = []
         last_long_pause = 4
@@ -763,7 +767,7 @@ class JapanesePhoneConverter(object):
         # print(len(jp_p_len), sum(w_p_len),  len(jp_p), sum(jp_p_len))
         assert len(jp_p) == len(jp_t) and len(jp_p) == len(jp_l)
         
-        jp_item['jp_p'] = jp_p.replace('| |', '|')
+        jp_item['jp_p'] = jp_p.replace('| |', '|').rstrip('|')
         jp_item['jp_t'] = jp_t
         jp_item['jp_l'] = jp_l
         jp_item['jp_normed_text'] = ' '.join(normed_text)

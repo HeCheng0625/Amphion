@@ -7,13 +7,15 @@ import inflect
 _inflect = inflect.engine()
 _comma_number_re = re.compile(r'([0-9][0-9\,]+[0-9])')
 _decimal_number_re = re.compile(r'([0-9]+\.[0-9]+)')
+_percent_number_re = re.compile(r'([0-9\.\,]*[0-9]+%)')
 _pounds_re = re.compile(r'£([0-9\,]*[0-9]+)')
 _dollars_re = re.compile(r'\$([0-9\.\,]*[0-9]+)')
+_fraction_re = re.compile(r'([0-9]+)/([0-9]+)')
 _ordinal_re = re.compile(r'[0-9]+(st|nd|rd|th)')
 _number_re = re.compile(r'[0-9]+')
 
 # List of (regular expression, replacement) pairs for abbreviations:
-_abbreviations = [(re.compile('\\b%s\\.' % x[0], re.IGNORECASE), x[1]) for x in [
+_abbreviations = [(re.compile('\\b%s\\b' % x[0], re.IGNORECASE), x[1]) for x in [
     ('mrs', 'misess'),
     ('mr', 'mister'),
     ('dr', 'doctor'),
@@ -32,6 +34,8 @@ _abbreviations = [(re.compile('\\b%s\\.' % x[0], re.IGNORECASE), x[1]) for x in 
     ('ltd', 'limited'),
     ('col', 'colonel'),
     ('ft', 'fort'),
+    ('etc', 'et cetera'),
+    ('btw', 'by the way'),
 ]]
 
 _special_map = [
@@ -39,6 +43,7 @@ _special_map = [
     ('d|ɹ', 'dɹ'),
     ('t|s', 'ts'),
     ('d|z', 'dz'),
+    ('ɪ|ɹ', 'ɪɹ'),
     ('ɐ', 'ɚ'),
     ('ᵻ', 'ɪ'),
     ('əl', 'l'),
@@ -61,6 +66,9 @@ def _remove_commas(m):
 def _expand_decimal_point(m):
     return m.group(1).replace('.', ' point ')
 
+def _expand_percent(m):
+    return m.group(1).replace('%', ' percent ')
+
 
 def _expand_dollars(m):
     match = m.group(1)
@@ -82,37 +90,53 @@ def _expand_dollars(m):
     else:
         return 'zero dollars'
 
+def fraction_to_words(numerator, denominator):
+    if numerator == 1 and denominator == 2:
+        return "one half"
+    if numerator == 1 and denominator == 4:
+        return "one quarter"
+    if denominator == 2:
+        return _inflect.number_to_words(numerator) + " halves"
+    if denominator == 4:
+        return _inflect.number_to_words(numerator) + " quarters"
+    return _inflect.number_to_words(numerator) + " " + _inflect.ordinal(_inflect.number_to_words(denominator))
+
+def _expand_fraction(m):
+    numerator = int(m.group(1))
+    denominator = int(m.group(2))
+    return fraction_to_words(numerator, denominator)
 
 def _expand_ordinal(m):
     return _inflect.number_to_words(m.group(0))
-
 
 def _expand_number(m):
     num = int(m.group(0))
     if num > 1000 and num < 3000:
         if num == 2000:
-            return 'two thousand'
+            return ' two thousand '
         elif num > 2000 and num < 2010:
-            return 'two thousand ' + _inflect.number_to_words(num % 100)
+            return ' two thousand ' + _inflect.number_to_words(num % 100) + ' '
         elif num % 100 == 0:
-            return _inflect.number_to_words(num // 100) + ' hundred'
+            return ' ' + _inflect.number_to_words(num // 100) + ' hundred '
         else:
-            return _inflect.number_to_words(num, andword='', zero='oh', group=2).replace(', ', ' ')
+            return ' ' + _inflect.number_to_words(num, andword='', zero='oh', group=2).replace(', ', ' ') + ' '
     else:
-        return _inflect.number_to_words(num, andword='')
+        return ' ' + _inflect.number_to_words(num, andword='') + ' '
 
 # Normalize numbers pronunciation
 def normalize_numbers(text):
     text = re.sub(_comma_number_re, _remove_commas, text)
     text = re.sub(_pounds_re, r'\1 pounds', text)
     text = re.sub(_dollars_re, _expand_dollars, text)
+    text = re.sub(_fraction_re, _expand_fraction, text)
     text = re.sub(_decimal_number_re, _expand_decimal_point, text)
+    text = re.sub(_percent_number_re, _expand_percent, text)
     text = re.sub(_ordinal_re, _expand_ordinal, text)
     text = re.sub(_number_re, _expand_number, text)
     return text
 
 def _english_to_ipa(text):
-    text = unidecode(text).lower()
+    # text = unidecode(text).lower()
     text = expand_abbreviations(text)
     text = normalize_numbers(text)
     return text
@@ -128,7 +152,10 @@ def special_map(text):
 
 # Add some special operation
 def english_to_ipa(text, text_tokenizer):
-    # text = _english_to_ipa(text)
+    if type(text) == str:
+        text = _english_to_ipa(text)
+    else:
+        text = [_english_to_ipa(t) for t in text]
     phonemes = text_tokenizer(text)
     if type(text) == str:
         return special_map(phonemes)
