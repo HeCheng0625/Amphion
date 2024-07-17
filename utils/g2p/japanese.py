@@ -618,7 +618,7 @@ class JapanesePhoneConverter(object):
             # print(parsed)
             yomi = parsed[i]["pron"]
             tmp_parsed = parsed[i]
-            if i != len(parsed)-1 and parsed[i+1]["string"] in ['々', 'ゝ', 'ヽ', 'ゞ', 'ヾ']:
+            if i != len(parsed)-1 and parsed[i+1]["string"] in ['々', 'ゝ', 'ヽ', 'ゞ', 'ヾ', '゛']: 
                 word = parsed[i]["string"] + parsed[i+1]["string"]
                 i += 1
             else:
@@ -649,7 +649,7 @@ class JapanesePhoneConverter(object):
                     "?",
                     ":",
                     ";",
-                    "⋯",
+                    "…",
                     "",
                 ):
                     # ここはpyopenjtalkが読めない文字等のときに起こる
