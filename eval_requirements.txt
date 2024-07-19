@@ -1,0 +1,10 @@
+funasr
+zhconv
+jiwer
+zhon
+modelscope
+transformers
+librosa
+soundfile
+torch
+torchaudio
