@@ -612,7 +612,7 @@ class JapanesePhoneConverter(object):
         sep_kata: list[str] = []
         fix_parsed = []
         i = 0
-        while i < len(parsed) - 1:
+        while i <= len(parsed) - 1:
             # word: 実際の単語の文字列
             # yomi: その読み、但し無声化サインの`’`は除去
             # print(parsed)
@@ -699,11 +699,14 @@ class JapanesePhoneConverter(object):
             frontend_text = pyopenjtalk.estimate_accent(frontend_text)
         except:
             pass
+        # print("estimate_accent: ", frontend_text)
         # sep_text: 単語単位の単語のリスト
         # sep_kata: 単語単位の単語のカタカナ読みのリスト
         sep_text, sep_kata, frontend_text = self.text2sep_kata(frontend_text)
+        # print("sep_text: ", sep_text)
+        # print("sep_kata: ", sep_kata)
+        # print("frontend_text: ", frontend_text)
         # sep_phonemes: 各単語ごとの音素のリストのリスト
-        # print(sentence)
         sep_phonemes = handle_long_word([kata2phoneme_list(i) for i in sep_kata])
         # print("sep_phonemes: ", sep_phonemes)
 
