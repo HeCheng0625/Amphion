@@ -74,32 +74,32 @@ def _expand_dollars(m):
     match = m.group(1)
     parts = match.split('.')
     if len(parts) > 2:
-        return match + ' dollars'  # Unexpected format
+        return ' ' + match + ' dollars '  # Unexpected format
     dollars = int(parts[0]) if parts[0] else 0
     cents = int(parts[1]) if len(parts) > 1 and parts[1] else 0
     if dollars and cents:
         dollar_unit = 'dollar' if dollars == 1 else 'dollars'
         cent_unit = 'cent' if cents == 1 else 'cents'
-        return '%s %s, %s %s' % (dollars, dollar_unit, cents, cent_unit)
+        return ' %s %s, %s %s ' % (dollars, dollar_unit, cents, cent_unit)
     elif dollars:
         dollar_unit = 'dollar' if dollars == 1 else 'dollars'
-        return '%s %s' % (dollars, dollar_unit)
+        return ' %s %s ' % (dollars, dollar_unit)
     elif cents:
         cent_unit = 'cent' if cents == 1 else 'cents'
-        return '%s %s' % (cents, cent_unit)
+        return ' %s %s ' % (cents, cent_unit)
     else:
-        return 'zero dollars'
+        return ' zero dollars '
 
 def fraction_to_words(numerator, denominator):
     if numerator == 1 and denominator == 2:
-        return "one half"
+        return " one half "
     if numerator == 1 and denominator == 4:
-        return "one quarter"
+        return " one quarter "
     if denominator == 2:
-        return _inflect.number_to_words(numerator) + " halves"
+        return " " + _inflect.number_to_words(numerator) + " halves "
     if denominator == 4:
-        return _inflect.number_to_words(numerator) + " quarters"
-    return _inflect.number_to_words(numerator) + " " + _inflect.ordinal(_inflect.number_to_words(denominator))
+        return " " + _inflect.number_to_words(numerator) + " quarters "
+    return " " + _inflect.number_to_words(numerator) + " " + _inflect.ordinal(_inflect.number_to_words(denominator)) + " "
 
 def _expand_fraction(m):
     numerator = int(m.group(1))
@@ -107,7 +107,7 @@ def _expand_fraction(m):
     return fraction_to_words(numerator, denominator)
 
 def _expand_ordinal(m):
-    return _inflect.number_to_words(m.group(0))
+    return ' ' + _inflect.number_to_words(m.group(0)) + ' '
 
 def _expand_number(m):
     num = int(m.group(0))
