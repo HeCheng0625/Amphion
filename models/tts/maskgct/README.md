@@ -17,7 +17,7 @@ MaskGCT (**Mask**ed **G**enerative **C**odec **T**ransformer) is *a fully non-au
 
 ## News
 
-- **2024/10/19**: We release **MaskGCT**, a fully non-autoregressive TTS model that eliminates the need for explicit alignment information between text and speech supervision. MaskGCT is trained on [Emilia](https://huggingface.co/datasets/amphion/Emilia-Dataset) dataset and achieves SOTA zero-shot TTS perfermance.
+- **2024/10/20**: We release **MaskGCT**, a fully non-autoregressive TTS model that eliminates the need for explicit alignment information between text and speech supervision. MaskGCT is trained on [Emilia](https://huggingface.co/datasets/amphion/Emilia-Dataset) dataset and achieves SOTA zero-shot TTS perfermance.
 
 ## Quickstart
 
@@ -165,6 +165,11 @@ We use the [Emilia](https://huggingface.co/datasets/amphion/Emilia-Dataset) data
 | XTTS-v2 | 0.635 | 2.876 | 0.413 | 2.95 ±0.18 | -0.81 ±0.22 |
 | MaskGCT | 0.774(0.805) | 2.273(0.843) | 0.106 | 4.09 ±0.12 | 0.05 ±0.17 |
 | MaskGCT(gt length) | 0.777 | 2.183 | 0.101 | 4.11 ±0.12 | 0.08±0.18 |
+
+## Acknowledgement
+[Vocos](https://github.com/gemelo-ai/vocos) for acoustic codec decoder code.
+
+[RepCodec](https://github.com/mct10/RepCodec) for semantic codec design.
 
 ## Citations
 
